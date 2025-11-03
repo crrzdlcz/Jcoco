@@ -1,0 +1,215 @@
+options
+{
+  static = true;
+}
+
+PARSER_BEGIN(Gramatica)
+package parser;
+
+import static coco.colores.*;
+import coco.entrada;
+import static java.lang.System.out;
+
+import java.io.InputStream;
+
+import static java.lang.System.err;
+
+
+public class Gramatica
+{
+  public static void main(String args []) throws ParseException
+  {
+	  if (args.length == 0)
+	  {
+		  err.println("ERROR: Se requiere la ruta del archivo fuente...");
+		  return;
+	  }
+	  
+	  String rutaArchivo = args[0];
+	  
+	  try (InputStream is = entrada.leerCodigoFuente(rutaArchivo))
+	  {
+		  Gramatica parser = new Gramatica(is);
+		  parser.Coco();
+	  }
+	  catch (java.io.IOException e)
+	  {
+	    err.println("Error al leer el archivo" + e.getMessage());
+	  }	  
+  }
+}
+
+PARSER_END(Gramatica)
+
+
+SKIP :
+{
+  " "
+| "\r"
+| "\t"
+| "\n"
+}
+
+TOKEN : /* TOKENS */
+{
+
+	/*
+	===========================
+		  TIPOS DE DATOS
+	===========================
+	*/
+  < Entero : "int" >
+| < Flotante : "float" >
+| < Boleano : "bool" >
+| < Char : "char" >
+| < String: "string" >
+
+
+	/*
+	===========================
+	  OPERADORES ARITMETICOS
+	===========================
+	*/
+
+| < operadorSuma : "+" >
+| < operadorResta : "-" >
+| < operadorMultiplicacion : "*" >
+| < operadorDiviSion : "/" >
+| < operadorModulo : "%" >
+| < operadorAsignacion : "=" >
+
+	/*
+	===========================
+		OPERADORES LOGICOS
+	===========================
+	*/
+
+| < operadorAND : "&&" >
+| < operadorOR : "||" >
+| < operadorNOT: "!" >
+
+
+	/*
+	===========================
+	 OPERADORES DE COMPARACIÓN
+	===========================
+	*/
+
+| < operadorMenoroIgual: "<=" >
+| < operadorMayoroIgual: ">=" >
+| < operadorIgualdad: "==" >
+| < operadorMenorQue : "<" >
+| < operadorMayorQue : ">" >
+| < operadorIncremento: "++" >
+| < operadorDecremento: "--" >
+
+
+	/*
+	===========================
+		   CONDICIONALES
+	===========================
+	*/
+
+| < condicionalIF : "if" >
+| < condicionalElSE : "else" >
+| < condicionalSWITCH : "switch" >
+| < caseSwitch : "case" >
+
+
+	/*
+	===========================
+			 SIMBOLOS
+	===========================
+	*/
+| < puntoyComa : ";" >
+| < dosPuntos : ":" >
+
+	/*
+	===========================
+			AGRUPACION
+	===========================
+	*/
+| < parentesisAbre : "(" >
+| < parentesisCierra : ")" >
+| < llaveAbre : "{" >
+| < llaveCierra : "}" >
+| < corcheteAbre : "[" >
+| < corcheteCierra : "]" >
+
+	/*
+	===========================
+		PALABRAS RESERVADAS
+	===========================
+	*/
+
+| < Incicio : "_inicio" >
+| < Final : "final_" >
+| < declaracionVariable : "coco" >
+| < declaracionFuncion : "fn" >
+| < salidaEstandar : "print!" >
+| < entradaEstandar : "scan!" >
+
+	/*
+	===========================
+			COMENTARIOS
+	===========================
+	*/
+
+/*
+	quitar
+*/
+| < comentario : "//" >
+| < comentarioMultipleAbre : "/#" >
+| < comentarioMultipleCierra : "#/" >
+
+	/*
+	===========================
+			CARACTERES
+	===========================
+	*/
+
+| < numeroEntero : ("+" | "-") ? (["0" - "9"])+ >
+| < numeroFlotante: ("+" | "-") ? (["0" - "9"])+ "." (["0" - "9"])+ >
+| < identificador: (["a" - "z", "A" - "Z", "_"]) (["a" - "z", "A" - "Z", "_"])* >
+| < cadenadeCaracteres : "\"" (~["\n", "\r", "\"" ])* "\"" >
+}
+
+SPECIAL_TOKEN :
+{
+	< CARACTER_ILEGAL : ~[] >
+  {
+    err.println(ROJO_NEGRITA + "ERROR LEXICO: Token no reconocido");
+    err.println("'" + image + "'");
+    err.println("En Linea: " + input_stream.getEndLine() + ", Columna "
+    		+ input_stream.getEndColumn());
+  }
+}
+
+
+void Coco() :
+{}
+{
+	  < Incicio > ( Sentencia() )* < Final > < EOF >
+}
+
+void Sentencia() :
+{}
+{
+  Declaracion_Variable()
+//| Declaracion_Funcion()
+//| Salida_Estandar()
+//| Entrada_Estandar()	
+}
+
+void Declaracion_Variable() :
+{}
+{
+  < declaracionVariable > < identificador > < dosPuntos >
+  (
+	< Entero > | < Flotante > | < Boleano > | < Char > | < String >
+  )
+  < operadorAsignacion >
+  (
+    < numeroEntero > | < numeroFlotante > | < cadenadeCaracteres > | < identificador >  )
+  < puntoyComa >
+}
