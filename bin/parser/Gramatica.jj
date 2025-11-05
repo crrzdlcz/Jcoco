@@ -5,7 +5,6 @@ options
 
 PARSER_BEGIN(Gramatica)
 package parser;
-
 import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
@@ -21,7 +20,7 @@ public class Gramatica
   {
 	  if (args.length == 0)
 	  {
-		  err.println("ERROR: Se requiere la ruta del archivo fuente...");
+		  err.println("ERROR: Se requiere la ruta del archivo fuente..." + "\n");
 		  return;
 	  }
 	  
@@ -48,7 +47,10 @@ SKIP :
 | "\r"
 | "\t"
 | "\n"
+| < COMENTARIO_UNILINEA : "//" (~["\n"])* ("\n") >
 }
+
+
 
 TOKEN : /* TOKENS */
 {
@@ -58,35 +60,12 @@ TOKEN : /* TOKENS */
 		  TIPOS DE DATOS
 	===========================
 	*/
-  < Entero : "int" >
-| < Flotante : "float" >
-| < Boleano : "bool" >
-| < Char : "char" >
-| < String: "string" >
 
-
-	/*
-	===========================
-	  OPERADORES ARITMETICOS
-	===========================
-	*/
-
-| < operadorSuma : "+" >
-| < operadorResta : "-" >
-| < operadorMultiplicacion : "*" >
-| < operadorDiviSion : "/" >
-| < operadorModulo : "%" >
-| < operadorAsignacion : "=" >
-
-	/*
-	===========================
-		OPERADORES LOGICOS
-	===========================
-	*/
-
-| < operadorAND : "&&" >
-| < operadorOR : "||" >
-| < operadorNOT: "!" >
+  < ENTERO : "int" >
+| < FLOTANTE : "float" >
+| < BOOLEANO : "bool" >
+| < CHAR : "char" >
+| < STRING: "string" >
 
 
 	/*
@@ -95,13 +74,37 @@ TOKEN : /* TOKENS */
 	===========================
 	*/
 
-| < operadorMenoroIgual: "<=" >
-| < operadorMayoroIgual: ">=" >
-| < operadorIgualdad: "==" >
-| < operadorMenorQue : "<" >
-| < operadorMayorQue : ">" >
-| < operadorIncremento: "++" >
-| < operadorDecremento: "--" >
+| < OPERADOR_MENOR_O_IGUAL : "<=" >
+| < OPERADOR_MAYOR_O_IGUAL : ">=" >
+| < OPERADOR_IGUALDAD : "==" >
+| < OPERADOR_DESIGUALDAD : "!=" >
+| < OPERADOR_MENOR_QUE : "<" >
+| < OPERADOR_MAYOR_QUE : ">" >
+| < OPERADOR_INCREMENTO : "++" >
+| < OPERADOR_DECREMENTO: "--" >
+
+	/*
+	===========================
+	  OPERADORES ARITMETICOS
+	===========================
+	*/
+
+| < OPERADOR_SUMA : "+" >
+| < OPERADOR_RESTA : "-" >
+| < OPERADOR_MULTIPLICACION : "*" >
+| < OPERADOR_DIVISION : "/" >
+| < OPERADOR_MODULO : "%" >
+| < OPERADOR_ASIGNACION : "=" >
+
+	/*
+	===========================
+		OPERADORES LOGICOS
+	===========================
+	*/
+
+| < OPERADOR_AND : "&&" >
+| < OPERADOR_OR : "||" >
+| < OPERADOR_NOT : "!" >
 
 
 	/*
@@ -110,31 +113,39 @@ TOKEN : /* TOKENS */
 	===========================
 	*/
 
-| < condicionalIF : "if" >
-| < condicionalElSE : "else" >
-| < condicionalSWITCH : "switch" >
-| < caseSwitch : "case" >
+| < CONDICIONAL_IF : "if" >
+| < CONDICIONAL_ELSE : "else" >
+| < CONDICIONAL_SWITCH : "switch" >
+| < CASE_CONDICIONAL_SWITCH : "case" >
 
+	/*
+	===========================
+			 BUCLES
+	===========================
+	*/
+
+| < BLUCLE_FOR : "for" >
+| < BUCLE_WHILE : "while" >
 
 	/*
 	===========================
 			 SIMBOLOS
 	===========================
 	*/
-| < puntoyComa : ";" >
-| < dosPuntos : ":" >
+| < PUNTO_Y_COMA : ";" >
+| < DOS_PUNTOS : ":" >
 
 	/*
 	===========================
 			AGRUPACION
 	===========================
 	*/
-| < parentesisAbre : "(" >
-| < parentesisCierra : ")" >
-| < llaveAbre : "{" >
-| < llaveCierra : "}" >
-| < corcheteAbre : "[" >
-| < corcheteCierra : "]" >
+| < PARENTSIS_ABRE : "(" >
+| < PARENTESIS_CIERRA : ")" >
+| < LLAVE_ABRE : "{" >
+| < LLAVE_CIERRA : "}" >
+| < CORCHETE_ABRE : "[" >
+| < CORCHETE_CIERRA : "]" >
 
 	/*
 	===========================
@@ -142,25 +153,12 @@ TOKEN : /* TOKENS */
 	===========================
 	*/
 
-| < Incicio : "_inicio" >
-| < Final : "final_" >
-| < declaracionVariable : "coco" >
-| < declaracionFuncion : "fn" >
-| < salidaEstandar : "print!" >
-| < entradaEstandar : "scan!" >
-
-	/*
-	===========================
-			COMENTARIOS
-	===========================
-	*/
-
-/*
-	quitar
-*/
-| < comentario : "//" >
-| < comentarioMultipleAbre : "/#" >
-| < comentarioMultipleCierra : "#/" >
+| < INICIO : "_inicio" >
+| < FINAL : "final_" >
+| < INICIO_DECLARACION_VARIABLE : "coco" >
+| < INICIO_DECLARACION_FUNCION : "fn" >
+| < SALIDA : "print!" >
+| < ENTRADA : "scan!" >
 
 	/*
 	===========================
@@ -168,48 +166,98 @@ TOKEN : /* TOKENS */
 	===========================
 	*/
 
-| < numeroEntero : ("+" | "-") ? (["0" - "9"])+ >
-| < numeroFlotante: ("+" | "-") ? (["0" - "9"])+ "." (["0" - "9"])+ >
-| < identificador: (["a" - "z", "A" - "Z", "_"]) (["a" - "z", "A" - "Z", "_"])* >
-| < cadenadeCaracteres : "\"" (~["\n", "\r", "\"" ])* "\"" >
+| < NUMERO_ENTERO : ("+" | "-") ? (["0" - "9"])+ >
+| < NUMERO_FLOTANTE : ("+" | "-") ? (["0" - "9"])+ "." (["0" - "9"])+ >
+| < IDENTIFICADOR : (["a" - "z", "A" - "Z", "_"]) (["a" - "z", "A" - "Z", "_"])* >
+| < CADENA_DE_CARACTERES : "\"" (~["\n", "\r", "\""])* "\"" >
 }
-
-SPECIAL_TOKEN :
-{
-	< CARACTER_ILEGAL : ~[] >
-  {
-    err.println(ROJO_NEGRITA + "ERROR LEXICO: Token no reconocido");
-    err.println("'" + image + "'");
-    err.println("En Linea: " + input_stream.getEndLine() + ", Columna "
-    		+ input_stream.getEndColumn());
-  }
-}
-
 
 void Coco() :
 {}
 {
-	  < Incicio > ( Sentencia() )* < Final > < EOF >
+  < INICIO > ( sentancias() )* < FINAL > < EOF >
 }
 
-void Sentencia() :
+void sentancias() :
 {}
 {
-  Declaracion_Variable()
-//| Declaracion_Funcion()
-//| Salida_Estandar()
-//| Entrada_Estandar()	
+  declaracionDeVariables()
+//| asignacionDeValores()
+| entrada()
+| salida()
+| operacionDeComparacion()
+//| expresionAritmetica()
+//| bucleFor()
+//| bucleWhile()
 }
 
-void Declaracion_Variable() :
+void declaracionDeVariables() :
 {}
-{
-  < declaracionVariable > < identificador > < dosPuntos >
+{    < INICIO_DECLARACION_VARIABLE >
   (
-	< Entero > | < Flotante > | < Boleano > | < Char > | < String >
+      < ENTERO >
+	| < FLOTANTE >
+	| < BOOLEANO >
+	| < CHAR >
+	| < STRING >
   )
-  < operadorAsignacion >
+  < DOS_PUNTOS > < IDENTIFICADOR > < OPERADOR_ASIGNACION >
   (
-    < numeroEntero > | < numeroFlotante > | < cadenadeCaracteres > | < identificador >  )
-  < puntoyComa >
+	  < NUMERO_ENTERO >
+	| < NUMERO_FLOTANTE >
+	| < CADENA_DE_CARACTERES >
+	| < IDENTIFICADOR >  )
+  < PUNTO_Y_COMA >
 }
+
+/*void asignacionDeValores() :
+{}
+{
+  ( < IDENTIFICADOR > < OPERADOR_ASIGNACION > < IDENTIFICADOR > < PUNTO_Y_COMA > )
+}*/
+
+void entrada() :
+{}
+{
+  < ENTRADA > < PARENTSIS_ABRE > < IDENTIFICADOR > < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
+}
+
+void salida() :
+{}
+{
+  < SALIDA > < PARENTSIS_ABRE > < CADENA_DE_CARACTERES > < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
+}
+
+void operacionDeComparacion() :
+{}
+{
+  ( < IDENTIFICADOR >
+  | < NUMERO_ENTERO >
+  | < NUMERO_FLOTANTE >
+  ) // <- OPERANDO IZQUIERDO
+  (
+    < OPERADOR_MENOR_O_IGUAL >
+  | < OPERADOR_MAYOR_O_IGUAL >
+  | < OPERADOR_MENOR_QUE >
+  | < OPERADOR_MAYOR_QUE >
+  | < OPERADOR_IGUALDAD >
+  | < OPERADOR_DESIGUALDAD >
+  ) // <- OPERADOR
+  (
+    < IDENTIFICADOR >
+  | < NUMERO_ENTERO >
+  | < NUMERO_FLOTANTE >  ) // <- OPERANDO DERECHO
+  	< PUNTO_Y_COMA >
+}
+
+
+
+
+
+
+
+
+
+
+
+

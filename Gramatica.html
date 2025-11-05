@@ -1,0 +1,415 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>BNF for Gramatica.jj</TITLE>
+</HEAD>
+<BODY>
+<H1 ALIGN=CENTER>BNF for Gramatica.jj</H1>
+<H2 ALIGN=CENTER>TOKENS</H2>
+<TABLE>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT&gt; SKIP : {
+" "
+| "\r"
+| "\t"
+| "\n"
+| &lt;COMENTARIO_UNILINEA: "//" (~["\n"])* "\n"&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT&gt; TOKEN : {
+&lt;ENTERO: "int"&gt;
+| &lt;FLOTANTE: "float"&gt;
+| &lt;BOOLEANO: "bool"&gt;
+| &lt;CHAR: "char"&gt;
+| &lt;STRING: "string"&gt;
+| &lt;OPERADOR_MENOR_O_IGUAL: "&lt;="&gt;
+| &lt;OPERADOR_MAYOR_O_IGUAL: "&gt;="&gt;
+| &lt;OPERADOR_IGUALDAD: "=="&gt;
+| &lt;OPERADOR_DESIGUALDAD: "!="&gt;
+| &lt;OPERADOR_MENOR_QUE: "&lt;"&gt;
+| &lt;OPERADOR_MAYOR_QUE: "&gt;"&gt;
+| &lt;OPERADOR_INCREMENTO: "++"&gt;
+| &lt;OPERADOR_DECREMENTO: "--"&gt;
+| &lt;OPERADOR_SUMA: "+"&gt;
+| &lt;OPERADOR_RESTA: "-"&gt;
+| &lt;OPERADOR_MULTIPLICACION: "*"&gt;
+| &lt;OPERADOR_DIVISION: "/"&gt;
+| &lt;OPERADOR_MODULO: "%"&gt;
+| &lt;OPERADOR_ASIGNACION: "="&gt;
+| &lt;OPERADOR_AND: "&amp;&amp;"&gt;
+| &lt;OPERADOR_OR: "||"&gt;
+| &lt;OPERADOR_NOT: "!"&gt;
+| &lt;CONDICIONAL_IF: "if"&gt;
+| &lt;CONDICIONAL_ELSE: "else"&gt;
+| &lt;CONDICIONAL_SWITCH: "switch"&gt;
+| &lt;CASE_CONDICIONAL_SWITCH: "case"&gt;
+| &lt;BLUCLE_FOR: "for"&gt;
+| &lt;BUCLE_WHILE: "while"&gt;
+| &lt;PUNTO_Y_COMA: ";"&gt;
+| &lt;DOS_PUNTOS: ":"&gt;
+| &lt;PARENTSIS_ABRE: "("&gt;
+| &lt;PARENTESIS_CIERRA: ")"&gt;
+| &lt;LLAVE_ABRE: "{"&gt;
+| &lt;LLAVE_CIERRA: "}"&gt;
+| &lt;CORCHETE_ABRE: "["&gt;
+| &lt;CORCHETE_CIERRA: "]"&gt;
+| &lt;INICIO: "_inicio"&gt;
+| &lt;FINAL: "final_"&gt;
+| &lt;INICIO_DECLARACION_VARIABLE: "coco"&gt;
+| &lt;INICIO_DECLARACION_FUNCION: "fn"&gt;
+| &lt;SALIDA: "print!"&gt;
+| &lt;ENTRADA: "scan!"&gt;
+| &lt;NUMERO_ENTERO: ("+" | "-")? (["0"-"9"])+&gt;
+| &lt;NUMERO_FLOTANTE: ("+" | "-")? (["0"-"9"])+ "." (["0"-"9"])+&gt;
+| &lt;IDENTIFICADOR: ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","_"])*&gt;
+| &lt;CADENA_DE_CARACTERES: "\"" (~["\n","\r","\""])* "\""&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+   </PRE>
+  </TD>
+ </TR>
+</TABLE>
+<H2 ALIGN=CENTER>NON-TERMINALS</H2>
+<TABLE>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod1">Coco</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;INICIO&gt; ( <A HREF="#prod2">sentancias</A> )* &lt;FINAL&gt; &lt;EOF&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod2">sentancias</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod3">declaracionDeVariables</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod4">entrada</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod5">salida</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>|</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod6">operacionDeComparacion</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod3">declaracionDeVariables</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;INICIO_DECLARACION_VARIABLE&gt; ( &lt;ENTERO&gt; | &lt;FLOTANTE&gt; | &lt;BOOLEANO&gt; | &lt;CHAR&gt; | &lt;STRING&gt; ) &lt;DOS_PUNTOS&gt; &lt;IDENTIFICADOR&gt; &lt;OPERADOR_ASIGNACION&gt; ( &lt;NUMERO_ENTERO&gt; | &lt;NUMERO_FLOTANTE&gt; | &lt;CADENA_DE_CARACTERES&gt; | &lt;IDENTIFICADOR&gt; ) &lt;PUNTO_Y_COMA&gt;</TD>
+</TR>
+ <!-- Special token -->
+ <TR>
+  <TD>
+<PRE>
+/*void asignacionDeValores() :
+{}
+{
+  ( < IDENTIFICADOR > < OPERADOR_ASIGNACION > < IDENTIFICADOR > < PUNTO_Y_COMA > )
+}*/</PRE>
+  </TD>
+ </TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod4">entrada</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;ENTRADA&gt; &lt;PARENTSIS_ABRE&gt; &lt;IDENTIFICADOR&gt; &lt;PARENTESIS_CIERRA&gt; &lt;PUNTO_Y_COMA&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod5">salida</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;SALIDA&gt; &lt;PARENTSIS_ABRE&gt; &lt;CADENA_DE_CARACTERES&gt; &lt;PARENTESIS_CIERRA&gt; &lt;PUNTO_Y_COMA&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod6">operacionDeComparacion</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;IDENTIFICADOR&gt; | &lt;NUMERO_ENTERO&gt; | &lt;NUMERO_FLOTANTE&gt; ) ( &lt;OPERADOR_MENOR_O_IGUAL&gt; | &lt;OPERADOR_MAYOR_O_IGUAL&gt; | &lt;OPERADOR_MENOR_QUE&gt; | &lt;OPERADOR_MAYOR_QUE&gt; | &lt;OPERADOR_IGUALDAD&gt; | &lt;OPERADOR_DESIGUALDAD&gt; ) ( &lt;IDENTIFICADOR&gt; | &lt;NUMERO_ENTERO&gt; | &lt;NUMERO_FLOTANTE&gt; ) &lt;PUNTO_Y_COMA&gt;</TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>

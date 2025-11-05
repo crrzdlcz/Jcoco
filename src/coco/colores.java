@@ -15,4 +15,6 @@ public class colores
 	public static final String VERDE_NEGRITA = colores.VERDE + colores.NEGRITAS;
 	public static final String AZUL_NEGRITA = colores.AZUL + colores.NEGRITAS;
 	public static final String MORADO_NEGRITA = colores.MORADO + colores.NEGRITAS;
+	
+	public static final String Limpiar_Pantalla = "\033[H\033[2J";
 }

@@ -1,0 +1,20 @@
+_inicio
+
+    scan!(a);
+    print!("Hola mundo");
+
+    coco int: HOLA  = "Adios";
+    coco int: p = xd;
+
+    HOLA >= ADIOS;
+
+    coco int: HOLA = ADIOS;
+
+
+    // Hola pepe modifique ..
+
+    int
+
+    |
+
+final_
