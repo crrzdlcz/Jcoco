@@ -60,6 +60,8 @@ public class Token implements java.io.Serializable {
    */
   public Token specialToken;
 
+  public String[] tokenName;
+
   /**
    * An optional attribute value of the Token.
    * Tokens which are not used as syntactic sugar will often contain

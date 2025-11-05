@@ -10,7 +10,7 @@ public class colores
 	public static final String UNDERLINE = "\033[4m";
 	public static final String NEGRITAS = "\033[1m";
 	
-	// Combinados.
+	// COMBINADOS
 	public static final String ROJO_NEGRITA = colores.ROJO + colores.NEGRITAS;
 	public static final String VERDE_NEGRITA = colores.VERDE + colores.NEGRITAS;
 	public static final String AZUL_NEGRITA = colores.AZUL + colores.NEGRITAS;

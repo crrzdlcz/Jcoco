@@ -1,6 +1,6 @@
 options
 {
-  static = true;
+  static = false;
 }
 
 PARSER_BEGIN(Gramatica)
@@ -209,12 +209,6 @@ void declaracionDeVariables() :
 	| < IDENTIFICADOR >  )
   < PUNTO_Y_COMA >
 }
-
-/*void asignacionDeValores() :
-{}
-{
-  ( < IDENTIFICADOR > < OPERADOR_ASIGNACION > < IDENTIFICADOR > < PUNTO_Y_COMA > )
-}*/
 
 void entrada() :
 {}

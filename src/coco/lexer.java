@@ -47,6 +47,7 @@ public class lexer
 			do {
 				try {
 					token = tokenManager.getNextToken();
+										
 					if (token.kind != GramaticaConstants.EOF)
 					{
 						String tokenKind = GramaticaConstants.tokenImage[token.kind];
