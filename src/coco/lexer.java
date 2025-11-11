@@ -116,10 +116,6 @@ public class lexer
 
 	public static void main(String[] args)
 	{
-		out.println( colores.AZUL_NEGRITA 
-				+ " Tokens Aceptados");
-		out.println("===================");
-		
 		String ruta = args[0];
 		InputStream is = null;
 		
@@ -127,13 +123,16 @@ public class lexer
 		{
 			is = new FileInputStream(ruta);
 		} catch (FileNotFoundException e) {
-			err.println("Error: Archivo '" + ruta + "' no encontrado.");
+			err.println( colores.ROJO_NEGRITA + "Error: Archivo '" + ruta + "' no encontrado.");
 			return;
 		}
 		try 
 		{
 			SimpleCharStream stream = new SimpleCharStream(new InputStreamReader(is));
 			GramaticaTokenManager tokenManager = new GramaticaTokenManager(stream);
+			
+			out.println( colores.AZUL_NEGRITA 
+					+ "=================== =================== ===================");
 			
 			Token token;
 			
@@ -148,11 +147,17 @@ public class lexer
 						String tokenKindName = getTokenName (token.kind, token.image);
 						
 						// String tokenKind = GramaticaConstants.tokenImage[token.kind];
-						out.println( colores.VERDE_NEGRITA 
-								+ "\t" + tokenKindName + colores.RESET 
+						/*out.println( colores.VERDE_NEGRITA 
+								+ "   " + tokenKindName + colores.RESET 
 								+ " -> " + "Valor: " + colores.MORADO_NEGRITA + token.image + colores.RESET
 								+ " -> " + "Linea: " + colores.UNDERLINE + token.beginLine + colores.RESET 
-								+ " -> " + "Columna: " + colores.UNDERLINE + token.beginColumn + colores.RESET );
+								+ " -> " + "Columna: " + colores.UNDERLINE + token.beginColumn + colores.RESET );*/
+						
+						out.println("  " 
+								+ colores.MORADO_NEGRITA + token.image + colores.RESET
+								+ " -> " + colores.VERDE_NEGRITA + tokenKindName + colores.RESET 
+								+ " en " + colores.UNDERLINE + token.beginLine 
+								+ ":" + colores.UNDERLINE + token.beginColumn + colores.RESET );
 					}
 				}
 				catch (TokenMgrError e) 
@@ -162,15 +167,18 @@ public class lexer
 							+ e.getMessage()
 							+ colores.RESET);
 					
-					out.println( colores.AZUL_NEGRITA + "===================");
-					out.println(" Analisis lexico terminado") ;
+					out.println( colores.ROJO_NEGRITA 
+							+ "=================== =================== ===================");
+					out.println( colores.ROJO_NEGRITA + " --> Analisis lexico terminado con errores <--") ;
 					return;
 				}
 			}
 			while (token.kind != GramaticaConstants.EOF);
 			
-			out.println( colores.AZUL_NEGRITA + "===================");
-			out.println(" Analisis lexico terminado") ;
+			out.println( colores.AZUL_NEGRITA 
+					+ "=================== =================== ===================");
+			out.println(" Analisis lexico terminado"
+					+ colores.VERDE_NEGRITA + "\n NO SE ENCONTRARON ERRORES") ;
 			
 		}
 		finally 

@@ -193,7 +193,8 @@ void sentancias() :
 
 void declaracionDeVariables() :
 {}
-{    < INICIO_DECLARACION_VARIABLE >
+{
+    < INICIO_DECLARACION_VARIABLE >
   (
       < ENTERO >
 	| < FLOTANTE >
@@ -206,7 +207,8 @@ void declaracionDeVariables() :
 	  < NUMERO_ENTERO >
 	| < NUMERO_FLOTANTE >
 	| < CADENA_DE_CARACTERES >
-	| < IDENTIFICADOR >  )
+	| < IDENTIFICADOR >
+  )
   < PUNTO_Y_COMA >
 }
 
@@ -240,7 +242,8 @@ void operacionDeComparacion() :
   (
     < IDENTIFICADOR >
   | < NUMERO_ENTERO >
-  | < NUMERO_FLOTANTE >  ) // <- OPERANDO DERECHO
+  | < NUMERO_FLOTANTE >
+  ) // <- OPERANDO DERECHO
   	< PUNTO_Y_COMA >
 }
 
