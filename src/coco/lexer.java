@@ -17,7 +17,7 @@ import java.io.InputStreamReader;
 public class lexer 
 {
 	
-	
+
 	private static String getTokenName (int tokenKind, String tokenImage) 
 	{
 		switch (tokenKind)
@@ -120,7 +120,7 @@ public class lexer
 		if (args.length == 0) {
 	        err.println(colores.ROJO_NEGRITA + "Error: Falta el archivo a analizar.");
 	        err.println("USO CORRECTO: java -jar coco.jar <ruta_al_archivo>");
-	        return; // Se sale de coco sin mostrar un error de "nativo" de java
+	        return; // Se sale de coco sin mostrar un error "nativo" de java
 	    }
 		
 		String ruta = args[0];

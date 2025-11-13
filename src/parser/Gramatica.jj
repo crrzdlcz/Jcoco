@@ -80,8 +80,7 @@ TOKEN : /* TOKENS */
 | < OPERADOR_DESIGUALDAD : "!=" >
 | < OPERADOR_MENOR_QUE : "<" >
 | < OPERADOR_MAYOR_QUE : ">" >
-| < OPERADOR_INCREMENTO : "++" >
-| < OPERADOR_DECREMENTO: "--" >
+
 
 	/*
 	===========================
@@ -95,6 +94,8 @@ TOKEN : /* TOKENS */
 | < OPERADOR_DIVISION : "/" >
 | < OPERADOR_MODULO : "%" >
 | < OPERADOR_ASIGNACION : "=" >
+| < OPERADOR_INCREMENTO : "++" >
+| < OPERADOR_DECREMENTO: "--" >
 
 	/*
 	===========================
@@ -124,7 +125,7 @@ TOKEN : /* TOKENS */
 	===========================
 	*/
 
-| < BLUCLE_FOR : "for" >
+| < BUCLE_FOR : "for" >
 | < BUCLE_WHILE : "while" >
 
 	/*
@@ -140,7 +141,7 @@ TOKEN : /* TOKENS */
 			AGRUPACION
 	===========================
 	*/
-| < PARENTSIS_ABRE : "(" >
+| < PARENTESIS_ABRE : "(" >
 | < PARENTESIS_CIERRA : ")" >
 | < LLAVE_ABRE : "{" >
 | < LLAVE_CIERRA : "}" >
