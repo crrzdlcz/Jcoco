@@ -1,6 +1,5 @@
 package coco;
 import static java.lang.System.out;
-import java.awt.DefaultFocusTraversalPolicy;
 import static java.lang.System.err;
 import parser.GramaticaConstants;
 import parser.GramaticaTokenManager;
@@ -36,6 +35,8 @@ public class lexer
 			return "CHAR";
 		case GramaticaConstants.STRING:
 			return "STRING";
+		case GramaticaConstants.FLECHA:
+			return "FLECHA";
 		case GramaticaConstants.OPERADOR_MENOR_O_IGUAL:
 			return "OPERADOR_MENOR_O_IGUAL";
 		case GramaticaConstants.OPERADOR_MAYOR_O_IGUAL:
@@ -74,7 +75,11 @@ public class lexer
 			return "CONDICIONAL_SWITCH";
 		case GramaticaConstants.CASE_CONDICIONAL_SWITCH:
 			return "CASE_CONDICIONAL_SWITCH";
-		case GramaticaConstants.BLUCLE_FOR:
+		case GramaticaConstants.DEFAULT_SWITCH:
+			return "DEFAULT_SWITCH";
+		case GramaticaConstants.BREAK:
+			return "BREAK";
+		case GramaticaConstants.BUCLE_FOR:
 			return "BLUCLE_FOR";
 		case GramaticaConstants.BUCLE_WHILE:
 			return "BUCLE_WHILE";
@@ -82,7 +87,7 @@ public class lexer
 			return "PUNTO_Y_COMA";
 		case GramaticaConstants.DOS_PUNTOS:
 			return "DOS_PUNTOS";
-		case GramaticaConstants.PARENTSIS_ABRE:
+		case GramaticaConstants.PARENTESIS_ABRE:
 			return "PARENTESIS_ABRE";
 		case GramaticaConstants.PARENTESIS_CIERRA:
 			return "PARENTESIS_CIERRA";
@@ -100,6 +105,8 @@ public class lexer
 			return "INICIO_DECLARACION_FUNCION";
 		case GramaticaConstants.SALIDA:
 			return "SALIDA";
+		case GramaticaConstants.RETURN:
+			return "RETURN";
 		case GramaticaConstants.ENTRADA:
 			return "ENTRADA";
 		case GramaticaConstants.NUMERO_ENTERO:
@@ -151,15 +158,7 @@ public class lexer
 										
 					if (token.kind != GramaticaConstants.EOF)
 					{
-						String tokenKindName = getTokenName (token.kind, token.image);
-						
-						// String tokenKind = GramaticaConstants.tokenImage[token.kind];
-						/*out.println( colores.VERDE_NEGRITA 
-								+ "   " + tokenKindName + colores.RESET 
-								+ " -> " + "Valor: " + colores.MORADO_NEGRITA + token.image + colores.RESET
-								+ " -> " + "Linea: " + colores.UNDERLINE + token.beginLine + colores.RESET 
-								+ " -> " + "Columna: " + colores.UNDERLINE + token.beginColumn + colores.RESET );*/
-						
+						String tokenKindName = getTokenName (token.kind, token.image);						
 						out.println("  " 
 								+ colores.MORADO_NEGRITA + token.image + colores.RESET
 								+ " -> " + colores.VERDE_NEGRITA + tokenKindName + colores.RESET 

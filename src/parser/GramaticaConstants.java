@@ -23,87 +23,97 @@ public interface GramaticaConstants {
   /** RegularExpression Id. */
   int STRING = 10;
   /** RegularExpression Id. */
-  int OPERADOR_MENOR_O_IGUAL = 11;
+  int COMA = 11;
   /** RegularExpression Id. */
-  int OPERADOR_MAYOR_O_IGUAL = 12;
+  int PUNTO_Y_COMA = 12;
   /** RegularExpression Id. */
-  int OPERADOR_IGUALDAD = 13;
+  int DOS_PUNTOS = 13;
   /** RegularExpression Id. */
-  int OPERADOR_DESIGUALDAD = 14;
+  int FLECHA = 14;
   /** RegularExpression Id. */
-  int OPERADOR_MENOR_QUE = 15;
+  int OPERADOR_MENOR_O_IGUAL = 15;
   /** RegularExpression Id. */
-  int OPERADOR_MAYOR_QUE = 16;
+  int OPERADOR_MAYOR_O_IGUAL = 16;
   /** RegularExpression Id. */
-  int OPERADOR_INCREMENTO = 17;
+  int OPERADOR_IGUALDAD = 17;
   /** RegularExpression Id. */
-  int OPERADOR_DECREMENTO = 18;
+  int OPERADOR_DESIGUALDAD = 18;
   /** RegularExpression Id. */
-  int OPERADOR_SUMA = 19;
+  int OPERADOR_MENOR_QUE = 19;
   /** RegularExpression Id. */
-  int OPERADOR_RESTA = 20;
+  int OPERADOR_MAYOR_QUE = 20;
   /** RegularExpression Id. */
-  int OPERADOR_MULTIPLICACION = 21;
+  int OPERADOR_SUMA = 21;
   /** RegularExpression Id. */
-  int OPERADOR_DIVISION = 22;
+  int OPERADOR_RESTA = 22;
   /** RegularExpression Id. */
-  int OPERADOR_MODULO = 23;
+  int OPERADOR_MULTIPLICACION = 23;
   /** RegularExpression Id. */
-  int OPERADOR_ASIGNACION = 24;
+  int OPERADOR_DIVISION = 24;
   /** RegularExpression Id. */
-  int OPERADOR_AND = 25;
+  int OPERADOR_MODULO = 25;
   /** RegularExpression Id. */
-  int OPERADOR_OR = 26;
+  int OPERADOR_ASIGNACION = 26;
   /** RegularExpression Id. */
-  int OPERADOR_NOT = 27;
+  int OPERADOR_INCREMENTO = 27;
   /** RegularExpression Id. */
-  int CONDICIONAL_IF = 28;
+  int OPERADOR_DECREMENTO = 28;
   /** RegularExpression Id. */
-  int CONDICIONAL_ELSE = 29;
+  int OPERADOR_AND = 29;
   /** RegularExpression Id. */
-  int CONDICIONAL_SWITCH = 30;
+  int OPERADOR_OR = 30;
   /** RegularExpression Id. */
-  int CASE_CONDICIONAL_SWITCH = 31;
+  int OPERADOR_NOT = 31;
   /** RegularExpression Id. */
-  int BLUCLE_FOR = 32;
+  int CONDICIONAL_IF = 32;
   /** RegularExpression Id. */
-  int BUCLE_WHILE = 33;
+  int CONDICIONAL_ELSE = 33;
   /** RegularExpression Id. */
-  int PUNTO_Y_COMA = 34;
+  int CONDICIONAL_SWITCH = 34;
   /** RegularExpression Id. */
-  int DOS_PUNTOS = 35;
+  int CASE_CONDICIONAL_SWITCH = 35;
   /** RegularExpression Id. */
-  int PARENTSIS_ABRE = 36;
+  int DEFAULT_SWITCH = 36;
   /** RegularExpression Id. */
-  int PARENTESIS_CIERRA = 37;
+  int BREAK = 37;
   /** RegularExpression Id. */
-  int LLAVE_ABRE = 38;
+  int BUCLE_FOR = 38;
   /** RegularExpression Id. */
-  int LLAVE_CIERRA = 39;
+  int BUCLE_WHILE = 39;
   /** RegularExpression Id. */
-  int CORCHETE_ABRE = 40;
+  int PARENTESIS_ABRE = 40;
   /** RegularExpression Id. */
-  int CORCHETE_CIERRA = 41;
+  int PARENTESIS_CIERRA = 41;
   /** RegularExpression Id. */
-  int INICIO = 42;
+  int LLAVE_ABRE = 42;
   /** RegularExpression Id. */
-  int FINAL = 43;
+  int LLAVE_CIERRA = 43;
   /** RegularExpression Id. */
-  int INICIO_DECLARACION_VARIABLE = 44;
+  int CORCHETE_ABRE = 44;
   /** RegularExpression Id. */
-  int INICIO_DECLARACION_FUNCION = 45;
+  int CORCHETE_CIERRA = 45;
   /** RegularExpression Id. */
-  int SALIDA = 46;
+  int INICIO = 46;
   /** RegularExpression Id. */
-  int ENTRADA = 47;
+  int FINAL = 47;
   /** RegularExpression Id. */
-  int NUMERO_ENTERO = 48;
+  int INICIO_DECLARACION_VARIABLE = 48;
   /** RegularExpression Id. */
-  int NUMERO_FLOTANTE = 49;
+  int INICIO_DECLARACION_FUNCION = 49;
   /** RegularExpression Id. */
-  int IDENTIFICADOR = 50;
+  int SALIDA = 50;
   /** RegularExpression Id. */
-  int CADENA_DE_CARACTERES = 51;
+  int ENTRADA = 51;
+  /** RegularExpression Id. */
+  int RETURN = 52;
+  /** RegularExpression Id. */
+  int NUMERO_FLOTANTE = 53;
+  /** RegularExpression Id. */
+  int NUMERO_ENTERO = 54;
+  /** RegularExpression Id. */
+  int IDENTIFICADOR = 55;
+  /** RegularExpression Id. */
+  int CADENA_DE_CARACTERES = 56;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -121,20 +131,24 @@ public interface GramaticaConstants {
     "\"bool\"",
     "\"char\"",
     "\"string\"",
+    "\",\"",
+    "\";\"",
+    "\":\"",
+    "\"->\"",
     "\"<=\"",
     "\">=\"",
     "\"==\"",
     "\"!=\"",
     "\"<\"",
     "\">\"",
-    "\"++\"",
-    "\"--\"",
     "\"+\"",
     "\"-\"",
     "\"*\"",
     "\"/\"",
     "\"%\"",
     "\"=\"",
+    "\"++\"",
+    "\"--\"",
     "\"&&\"",
     "\"||\"",
     "\"!\"",
@@ -142,10 +156,10 @@ public interface GramaticaConstants {
     "\"else\"",
     "\"switch\"",
     "\"case\"",
+    "\"default\"",
+    "\"break\"",
     "\"for\"",
     "\"while\"",
-    "\";\"",
-    "\":\"",
     "\"(\"",
     "\")\"",
     "\"{\"",
@@ -158,8 +172,9 @@ public interface GramaticaConstants {
     "\"fn\"",
     "\"print!\"",
     "\"scan!\"",
-    "<NUMERO_ENTERO>",
+    "\"return\"",
     "<NUMERO_FLOTANTE>",
+    "<NUMERO_ENTERO>",
     "<IDENTIFICADOR>",
     "<CADENA_DE_CARACTERES>",
   };

@@ -1,17 +1,17 @@
 _inicio
-
+    ->
     scan!(a);
     print!("Hola mundo");
 
     coco int: HOLA  = "Adios";
-    coco int: p = xd;
+    coco int: p = xd@;
 
     HOLA >= ADIOS;
 
-    coco int: HOLA = ADIOS;
+    coco int: HOLA~ = ADIOS;
 
     // Hola pedro modifique ..
 
-    12.12
 
-    final_
+    12.12
+final_

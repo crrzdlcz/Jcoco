@@ -1,0 +1,30 @@
+// En la decalracion de una funcion,
+// Se especifica el tipo de dato de regreso.
+fn suma -> int ()
+{
+    // Declaración de variables.
+    coco int: a = 10;
+    coco int: b = 20;
+    coco int: resultado = 0;
+
+    // Ingreso de datos desde el teclado.
+    print!("Ingrese el primer numero: ");
+    scan!(a);
+    print!("Ingrese el segundo numero: ");
+    scan!(b);
+
+    // Operación aritmetica
+    resultado = a + b;
+
+    // Regreso de un valor.
+    return resultado;
+}
+
+// Inicio del codigo ejecutable.
+_inicio
+
+   // Llamada a la funcion suma.
+    suma();
+
+final_
+// Fin del código ejecutable.

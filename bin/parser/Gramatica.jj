@@ -1,6 +1,6 @@
 options
 {
-  static = false;
+  static = true;
 }
 
 PARSER_BEGIN(Gramatica)
@@ -67,6 +67,15 @@ TOKEN : /* TOKENS */
 | < CHAR : "char" >
 | < STRING: "string" >
 
+	/*
+	===========================
+			 SIMBOLOS
+	===========================
+	*/
+| < COMA : "," >
+| < PUNTO_Y_COMA : ";" >
+| < DOS_PUNTOS : ":" >
+| < FLECHA : "->" >
 
 	/*
 	===========================
@@ -118,6 +127,8 @@ TOKEN : /* TOKENS */
 | < CONDICIONAL_ELSE : "else" >
 | < CONDICIONAL_SWITCH : "switch" >
 | < CASE_CONDICIONAL_SWITCH : "case" >
+| < DEFAULT_SWITCH : "default" >
+| < BREAK : "break" >
 
 	/*
 	===========================
@@ -128,13 +139,6 @@ TOKEN : /* TOKENS */
 | < BUCLE_FOR : "for" >
 | < BUCLE_WHILE : "while" >
 
-	/*
-	===========================
-			 SIMBOLOS
-	===========================
-	*/
-| < PUNTO_Y_COMA : ";" >
-| < DOS_PUNTOS : ":" >
 
 	/*
 	===========================
@@ -160,6 +164,7 @@ TOKEN : /* TOKENS */
 | < INICIO_DECLARACION_FUNCION : "fn" >
 | < SALIDA : "print!" >
 | < ENTRADA : "scan!" >
+| < RETURN : "return" >
 
 	/*
 	===========================
@@ -167,95 +172,306 @@ TOKEN : /* TOKENS */
 	===========================
 	*/
 
-| < NUMERO_ENTERO : ("+" | "-") ? (["0" - "9"])+ >
-| < NUMERO_FLOTANTE : ("+" | "-") ? (["0" - "9"])+ "." (["0" - "9"])+ >
-| < IDENTIFICADOR : (["a" - "z", "A" - "Z", "_"]) (["a" - "z", "A" - "Z", "_"])* >
+| < NUMERO_FLOTANTE : (["0" - "9"])+ "." (["0" - "9"])+ >
+| < NUMERO_ENTERO : (["0" - "9"])+ >
+| < IDENTIFICADOR : (["a" - "z", "A" - "Z", "_"]) (["a" - "z", "A" - "Z", "0" - "9", "_"])* >
 | < CADENA_DE_CARACTERES : "\"" (~["\n", "\r", "\""])* "\"" >
 }
 
+// Producción principal.
 void Coco() :
 {}
 {
-  < INICIO > ( sentancias() )* < FINAL > < EOF >
+	( funcion() )* < INICIO > ( sentencia() )* < FINAL > < EOF >
 }
 
-void sentancias() :
+// Funciones, van antes de la funcion principal (< INICIO > *** < FINAL >)
+// Si regresa un valor, debe ser especificado explicitamente,
+// declarando el tipo y el nombre de la variable
+void funcion() :
 {}
 {
-  declaracionDeVariables()
-//| asignacionDeValores()
-| entrada()
+  < INICIO_DECLARACION_FUNCION > < IDENTIFICADOR > < FLECHA > tiposDeDatos() < PARENTESIS_ABRE > listaParametros() < PARENTESIS_CIERRA >
+  	bloqueDeCodigo()
+}
+
+// Lista de parametros que se pueden pasar a una función. (Producción)
+void listaParametros() :
+{}
+{
+  ( parametro() ( < COMA > parametro() )* ) ?
+}
+
+// Regla que define los parametros individuales.
+void parametro() :
+{}
+{
+  tiposDeDatos() < DOS_PUNTOS > < IDENTIFICADOR >
+}
+
+// Es lo que esta dentro de llaves
+// - > Su "scope" debe ser 1.
+void bloqueDeCodigo() :
+{}
+{
+  < LLAVE_ABRE >
+  	( sentencia() )*
+  < LLAVE_CIERRA >
+}
+
+// Producción sentencia
+void sentencia() :
+{}
+{
+  declaracionDeVariable()
+| declaracionVector()
 | salida()
-| operacionDeComparacion()
-//| expresionAritmetica()
-//| bucleFor()
-//| bucleWhile()
+| entrada()
+| bucleFor()
+| bucleWhile()
+| condicionalIf()
+| condicionalSwitch()
+| sentenciaRetorno()
+| sentenciasConIdentificador()
 }
 
-void declaracionDeVariables() :
+void sentenciasConIdentificador() :
 {}
 {
-    < INICIO_DECLARACION_VARIABLE >
-  (
-      < ENTERO >
-	| < FLOTANTE >
-	| < BOOLEANO >
-	| < CHAR >
-	| < STRING >
-  )
-  < DOS_PUNTOS > < IDENTIFICADOR > < OPERADOR_ASIGNACION >
-  (
-	  < NUMERO_ENTERO >
-	| < NUMERO_FLOTANTE >
-	| < CADENA_DE_CARACTERES >
-	| < IDENTIFICADOR >
-  )
+    //LOOKAHEAD( <IDENTIFICADOR> <PARENTESIS_ABRE> )
+    LOOKAHEAD(2)
+    llamadaFuncion() < PUNTO_Y_COMA >
+    
+    //llamadaFuncion() <PUNTO_Y_COMA>
+    
+  
+  |
+	LOOKAHEAD(2)
+  	accesoVector() <OPERADOR_ASIGNACION> expresion() <PUNTO_Y_COMA>
+  | <IDENTIFICADOR> <OPERADOR_ASIGNACION> expresion() <PUNTO_Y_COMA>
+
+}
+
+void sentenciaRetorno() :
+{}
+{
+  < RETURN > expresion() < PUNTO_Y_COMA >
+}
+
+void llamadaFuncion() :
+{}
+{
+  < IDENTIFICADOR >
+  < PARENTESIS_ABRE >
+  ( expresion() ( < COMA > expresion() )* )?
+  < PARENTESIS_CIERRA >
+}
+
+// *** Expresiones usando precedencia ***
+
+// Expresiones (+, -, ||)
+void expresion() :
+{}
+{
+  	expresionRelacional() // Primero busca el una expresion mas fuerte/elevada.
+  	(
+  	   ( < OPERADOR_SUMA > | < OPERADOR_RESTA > | < OPERADOR_OR > ) 
+        expresionRelacional() 	  	)*
+}
+
+
+// relacionales (==, !=, <, >, <=, >=)
+void expresionRelacional() :
+{}
+{
+  termino() // Busca la siguente mas fuerte/elevada.
+      (
+        ( 
+            < OPERADOR_IGUALDAD > | < OPERADOR_DESIGUALDAD > 
+          | < OPERADOR_MENOR_QUE > | < OPERADOR_MAYOR_QUE >
+          | < OPERADOR_MENOR_O_IGUAL > | < OPERADOR_MAYOR_O_IGUAL > 
+        )
+        termino()
+    )?
+}
+
+// Terminos (*, /, %, &&)
+void termino() :
+{}
+{
+  factor() // Busca la siguente mas fuerte/elevada.
+   (
+        ( < OPERADOR_MULTIPLICACION > | < OPERADOR_DIVISION > | < OPERADOR_MODULO > | < OPERADOR_AND > )
+        factor()
+    )*
+}
+
+// Factores (!, ++, --)
+void factor() :
+{}
+{
+    < NUMERO_ENTERO >
+  | < NUMERO_FLOTANTE >
+  | < CADENA_DE_CARACTERES > 
+  | < IDENTIFICADOR >
+  | < PARENTESIS_ABRE > expresion() < PARENTESIS_CIERRA >
+  | < OPERADOR_NOT > factor()
+  | < OPERADOR_INCREMENTO > factor()
+  | < OPERADOR_DECREMENTO > factor()
+  | < OPERADOR_RESTA > factor()
+  //| llamadaFuncion()
+}
+
+// Fin de las expresiones
+
+void declaracionDeVariable() :
+{}
+{
+  < INICIO_DECLARACION_VARIABLE > tiposDeDatos() < DOS_PUNTOS > < IDENTIFICADOR >
+  [ < OPERADOR_ASIGNACION > ( expresion() ) ]
   < PUNTO_Y_COMA >
 }
 
-void entrada() :
-{}
-{
-  < ENTRADA > < PARENTSIS_ABRE > < IDENTIFICADOR > < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
-}
-
+// print!("Hola mundo");
 void salida() :
 {}
 {
-  < SALIDA > < PARENTSIS_ABRE > < CADENA_DE_CARACTERES > < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
+  < SALIDA > < PARENTESIS_ABRE > ( expresion() )
+  < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
 }
 
-void operacionDeComparacion() :
+// scan!(operando);
+void entrada() :
 {}
 {
-  ( < IDENTIFICADOR >
-  | < NUMERO_ENTERO >
-  | < NUMERO_FLOTANTE >
-  ) // <- OPERANDO IZQUIERDO
-  (
-    < OPERADOR_MENOR_O_IGUAL >
-  | < OPERADOR_MAYOR_O_IGUAL >
-  | < OPERADOR_MENOR_QUE >
-  | < OPERADOR_MAYOR_QUE >
-  | < OPERADOR_IGUALDAD >
-  | < OPERADOR_DESIGUALDAD >
-  ) // <- OPERADOR
-  (
-    < IDENTIFICADOR >
-  | < NUMERO_ENTERO >
-  | < NUMERO_FLOTANTE >
-  ) // <- OPERANDO DERECHO
-  	< PUNTO_Y_COMA >
+  < ENTRADA > < PARENTESIS_ABRE > < IDENTIFICADOR > < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
 }
 
+// Vector
+void declaracionVector() :
+{}
+{
+  tiposDeDatos() < IDENTIFICADOR > dimensionVector() < PUNTO_Y_COMA >
+}
+
+void dimensionVector() :
+{}
+{
+  < CORCHETE_ABRE > ( < NUMERO_ENTERO > | < IDENTIFICADOR > ) < CORCHETE_CIERRA > 
+}
+
+void accesoVector() :
+{}
+{
+  < IDENTIFICADOR > < CORCHETE_ABRE > ( < NUMERO_ENTERO > | < IDENTIFICADOR > ) < CORCHETE_CIERRA >
+}
+// FIN vector
 
 
+// Bucles.
+// - > For
+void bucleFor() :
+{}
+{
+   < BUCLE_FOR > < PARENTESIS_ABRE >
+   ( inicializacionFor() )? < PUNTO_Y_COMA >
+   ( expresion() )? < PUNTO_Y_COMA >
+   ( actualizacionFor() )?
+   < PARENTESIS_CIERRA >
+   bloqueDeCodigo()
+}
+
+// Declaracion e inicializacion de variables en bucles.
+void inicializacionFor():
+{}
+{
+  declaracionDeVariable()
+|  asignacionSinPuntoYComa() 
+}
+
+// Auxiliar
+void asignacionSinPuntoYComa() :
+{}
+{
+    LOOKAHEAD(2)
+    < IDENTIFICADOR > < OPERADOR_ASIGNACION > expresion() // Sin punto y coma
+  | 
+    accesoVector() < OPERADOR_ASIGNACION > expresion() // Sin punto y coma
+}
+
+void actualizacionFor() :
+{}
+{
+   asignacionSinPuntoYComa() ( < COMA > asignacionSinPuntoYComa() )* 
+}
+
+// - > While
+void bucleWhile() :
+{}
+{
+  < BUCLE_WHILE >
+  < PARENTESIS_ABRE >
+  expresion()
+  < PARENTESIS_CIERRA >
+  bloqueDeCodigo()
+}
+// FIN bucles.
 
 
+// Condicionales.
+// - > If
+void condicionalIf() :
+{}
+{
+  < CONDICIONAL_IF > < PARENTESIS_ABRE > expresion() < PARENTESIS_CIERRA >
+  bloqueDeCodigo()
+  ( < CONDICIONAL_ELSE > ( bloqueDeCodigo() | condicionalIf() ) )?
+}
 
+// - > Swich
+void condicionalSwitch() :
+{}
+{
+  < CONDICIONAL_SWITCH >
+  < PARENTESIS_ABRE >
+  expresion()
+  < PARENTESIS_CIERRA >
+  < LLAVE_ABRE >
+  ( caseSwitch() )*
+  ( defaultSwitch() )?
+  < LLAVE_CIERRA >
+}
 
+void caseSwitch() :
+{}
+{
+  < CASE_CONDICIONAL_SWITCH >
+  ( < NUMERO_ENTERO > | < CADENA_DE_CARACTERES > )
+  < DOS_PUNTOS >
+  ( sentencia() )*
+  ( sentenciaBreak() )?
+}
 
+void sentenciaBreak() :
+{}
+{
+  < BREAK > < PUNTO_Y_COMA >
+}
 
+void defaultSwitch() :
+{}
+{
+  < DEFAULT_SWITCH >
+  < DOS_PUNTOS > ( sentencia() )* ( sentenciaBreak() )?
+}
+// FIN condicionales.
 
-
-
+void tiposDeDatos() :
+{}
+{
+  < ENTERO >
+| < FLOTANTE >
+| < BOOLEANO >
+| < CHAR >
+| < STRING >
+}
