@@ -1,30 +1,38 @@
-// En la decalracion de una funcion,
-// Se especifica el tipo de dato de regreso.
-fn suma -> int ()
-{
-    // Declaración de variables.
-    coco int: a = 10;
-    coco int: b = 20;
-    coco int: resultado = 0;
+fn suma -> int () // -> Declaración de una funcion
+{ // -> *** Bloque de codigo ***
 
-    // Ingreso de datos desde el teclado.
-    print!("Ingrese el primer numero: ");
+    coco int: a = 10; // -> Declaración de variables.
+    coco int: b = 20;
+    coco int: resultado;
+    resultado = 0; // -> Asignación de valor a una variable.
+
+
+    print!("Ingrese el primer numero: "); // -> Impresion de mensajes.
     scan!(a);
     print!("Ingrese el segundo numero: ");
-    scan!(b);
+    scan!(b); // -> Ingreso de datos desde el teclado.
 
-    // Operación aritmetica
-    resultado = a + b;
+    resultado = a + b; //->  Operación aritmetica.
 
-    // Regreso de un valor.
+    // Regreso de un valor (variable resultado).
     return resultado;
 }
 
-// Inicio del codigo ejecutable.
-_inicio
 
-   // Llamada a la funcion suma.
-    suma();
+_inicio // -> Inicio del codigo ejecutable.
 
-final_
-// Fin del código ejecutable.
+
+    suma(); // -> Llamada a la funcion suma.
+
+    if (suma <= 30) // -> Condicional if
+    {
+        print!("La suma es mayor o igual que 30!");
+    }
+    else // -> Condicional else
+    {
+        print!("La suma es menor que 30!");
+    }
+
+
+final_ // -> Fin del código ejecutable.
+

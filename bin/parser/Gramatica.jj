@@ -8,6 +8,7 @@ package parser;
 import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
+import java.io.IOException;
 
 import java.io.InputStream;
 
@@ -16,25 +17,22 @@ import static java.lang.System.err;
 
 public class Gramatica
 {
-  public static void main(String args []) throws ParseException
+  public static void main(String args []) throws ParseException, IOException
   {
 	  if (args.length == 0)
 	  {
-		  err.println("ERROR: Se requiere la ruta del archivo fuente..." + "\n");
-		  return;
+		  err.println("ERROR: Se requiere la ruta del archivo fuente...");
+		  //return;
+		  System.exit(1);
 	  }
 	  
 	  String rutaArchivo = args[0];
+
+	  InputStream is = entrada.leerCodigoFuente(rutaArchivo);
+	  Gramatica parser = new Gramatica(is);
+	  parser.Coco();
+	  is.close();
 	  
-	  try (InputStream is = entrada.leerCodigoFuente(rutaArchivo))
-	  {
-		  Gramatica parser = new Gramatica(is);
-		  parser.Coco();
-	  }
-	  catch (java.io.IOException e)
-	  {
-	    err.println("Error al leer el archivo" + e.getMessage());
-	  }	  
   }
 }
 

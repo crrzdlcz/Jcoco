@@ -4,6 +4,7 @@ package parser;
 import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
+import java.io.IOException;
 
 import java.io.InputStream;
 
@@ -11,25 +12,33 @@ import static java.lang.System.err;
 
 
 public class Gramatica implements GramaticaConstants {
-  public static void main(String args []) throws ParseException
+  public static void main(String args []) throws ParseException, IOException
   {
           if (args.length == 0)
           {
-                  err.println("ERROR: Se requiere la ruta del archivo fuente..." + "\n");
-                  return;
+                  err.println("ERROR: Se requiere la ruta del archivo fuente...");
+                  //return;
+                  System.exit(1);
           }
 
           String rutaArchivo = args[0];
 
-          try (InputStream is = entrada.leerCodigoFuente(rutaArchivo))
-          {
-                  Gramatica parser = new Gramatica(is);
-                  parser.Coco();
-          }
-          catch (java.io.IOException e)
-          {
-            err.println("Error al leer el archivo" + e.getMessage());
-          }
+/*	  Mal manejo de erroor e/s
+	  try (InputStream is = entrada.leerCodigoFuente(r	utaArchivo))
+	  {
+		  Gramatica parser = new Gramatica(is);
+		  parser.Coco();
+	  }
+	  catch (java.io.IOException e)
+	  {
+	    err.println("Error al leer el archivo " + e.getMessage());
+	  }
+*/
+          InputStream is = entrada.leerCodigoFuente(rutaArchivo);
+          Gramatica parser = new Gramatica(is);
+          parser.Coco();
+          is.close();
+
   }
 
 // Producción principal.
@@ -894,7 +903,7 @@ void tiposDeDatos() throws ParseException {
     finally { jj_save(2, xla); }
   }
 
-  static private boolean jj_3R_accesoVector_367_3_13()
+  static private boolean jj_3R_accesoVector_376_3_13()
  {
     if (jj_scan_token(IDENTIFICADOR)) return true;
     if (jj_scan_token(CORCHETE_ABRE)) return true;
@@ -910,17 +919,17 @@ void tiposDeDatos() throws ParseException {
 
   static private boolean jj_3_2()
  {
-    if (jj_3R_accesoVector_367_3_13()) return true;
+    if (jj_3R_accesoVector_376_3_13()) return true;
     return false;
   }
 
   static private boolean jj_3_1()
  {
-    if (jj_3R_llamadaFuncion_264_3_12()) return true;
+    if (jj_3R_llamadaFuncion_273_3_12()) return true;
     return false;
   }
 
-  static private boolean jj_3R_llamadaFuncion_264_3_12()
+  static private boolean jj_3R_llamadaFuncion_273_3_12()
  {
     if (jj_scan_token(IDENTIFICADOR)) return true;
     if (jj_scan_token(PARENTESIS_ABRE)) return true;

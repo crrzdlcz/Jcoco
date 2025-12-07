@@ -2,7 +2,7 @@ package coco;
 import parser.Gramatica;
 import static java.lang.System.out;
 import static java.lang.System.err;
-import parser.TokenMgrError;
+import parser.TokenMgrError;  
 
 public class main
 {
@@ -30,9 +30,20 @@ public class main
 		*/
 		
         try {
-            Gramatica.main(args);
+          //  Gramatica.main(args); 
             
-    		out.printf(colores.Limpiar_Pantalla);		
+    	/*	out.printf(colores.Limpiar_Pantalla);		
+    		
+    		out.println(colores.VERDE_NEGRITA
+    				+ "\n\t  🥥 Coco 🥥"
+    				+ colores.RESET
+    				);
+    		out.println(colores.VERDE_NEGRITA
+    				+ "  ==========================="
+    				+ colores.RESET
+    				); */
+    		
+        	out.printf(colores.Limpiar_Pantalla);		
     		
     		out.println(colores.VERDE_NEGRITA
     				+ "\n\t  🥥 Coco 🥥"
@@ -42,11 +53,20 @@ public class main
     				+ "  ==========================="
     				+ colores.RESET
     				);
-    		out.println(colores.VERDE_NEGRITA + " --> Análisis terminado exitosamente <-- ");
+        	
+    		Gramatica.main(args); 
+    		
+    		
+    		
+            //out.println(colores.RESET);
+    		
+    		out.print(colores.VERDE_NEGRITA + " --> Análisis terminado exitosamente <-- ");
             out.println(colores.RESET);
     		
         }
-        catch (TokenMgrError e) { 
+        
+            
+        catch (TokenMgrError e) { // Errores Léxicos
         	
     		out.printf(colores.Limpiar_Pantalla);		
     		
@@ -93,7 +113,7 @@ public class main
         	
     		out.printf(colores.Limpiar_Pantalla);		
     		
-    		out.println(colores.AZUL_NEGRITA
+    		out.println(colores.AZUL_NEGRITA	
     				+ "\n\t  🥥 Coco 🥥"
     				+ colores.RESET
     				);

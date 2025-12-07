@@ -4,6 +4,7 @@ package parser;
 import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
+import java.io.IOException;
 import java.io.InputStream;
 import static java.lang.System.err;
 
