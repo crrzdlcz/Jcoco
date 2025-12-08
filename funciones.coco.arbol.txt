@@ -108,22 +108,4 @@
 |  |  |  |  -> Token: )
 |  |  |  |  -> Token: ;
 |  |  |  -> Token: }
-|  -> SentenciasConIdentificador
-|  |  -> LlamadaAFuncion
-|  |  |  -> Token: hola
-|  |  |  -> Token: (
-|  |  |  -> Literal_IDENTIFICADOR: sumaA
-|  |  |  -> Token: )
-|  |  -> Token: ;
-|  -> DeclaracionDeVariable
-|  |  -> Token: coco
-|  |  -> Tipo: int
-|  |  -> Token: :
-|  |  -> Token: a
-|  |  -> Token: =
-|  |  -> Operacion_SUM_RES_OR: +
-|  |  |  -> Literal_INT: 10
-|  |  |  -> Token: +
-|  |  |  -> Literal_INT: 20
-|  |  -> Token: ;
 |  -> Token: final_

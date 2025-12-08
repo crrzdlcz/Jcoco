@@ -39,7 +39,8 @@ public class Tabla
 		{
 				this.ambitoActual = nombreAmbito;
 				pilaDeTablas.push(new HashMap<>());
-				out.println(">>> Entrando a un nuevo ambito: " + nombreAmbito);
+				// Comentado por el momento.
+				//out.println(">>> Entrando a un nuevo ambito: " + nombreAmbito);
 		}
 		
 		public void salirAmbito()
@@ -55,7 +56,8 @@ public class Tabla
 		                    this.ambitoActual = "global"; // Vuelve al ámbito inicial
 		                }
 
-						out.println("<<< Saliendo del ámbito: " + nombreAmbitoSaliente); 
+		                // Comentado por el momento
+						// out.println("<<< Saliendo del ámbito: " + nombreAmbitoSaliente); 
 				}
 		}
 		
@@ -90,8 +92,6 @@ public class Tabla
 		{
 		        destino.println("--- TABLA DE SIMBOLOS ----------------------------------");
 		        
-		        // Iteramos desde el ámbito global (base de la pila) hasta el actual (cima)
-		        // Puedes cambiar el orden si prefieres ver el ámbito actual primero.
 		        for (int i = 0; i < pilaDeTablas.size(); i++ )
 		        {
 		                HashMap<String, Simbolo> tabla = pilaDeTablas.get(i);
@@ -102,20 +102,15 @@ public class Tabla
 		                if (i == 0) {
 		                    nombreAmbito = "global";
 		                } else {
-		                    // Si tienes el nombre del ámbito guardado en la pila, úsalo aquí.
-		                    // Como no lo tienes, usaremos el índice y la clave.
 		                    nombreAmbito = "Ámbito Nivel " + i; 
 		                }
 
 		                destino.println("\n== " + nombreAmbito + " (Registros: " + tabla.size() + ") ==");
 		                
-		                // Imprimir la cabecera
 		                destino.printf("%-15s | %-10s | %-10s | %s\n", "NOMBRE", "TIPO", "ÁMBITO", "LINEA");
 		                destino.println("-----------------------------------------------------");
 
-		                // Iterar sobre todos los símbolos en este nivel
 		                for (Simbolo s : tabla.values()) {
-		                    // Usamos printf para un formato de tabla limpio
 		                    destino.printf(
 		                        "%-15s | %-10s | %-10s | %d\n", 
 		                        s.nombre, 
