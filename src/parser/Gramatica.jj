@@ -1,6 +1,6 @@
 options
 {
-  static = true;
+  //static = true;
 }
 
 PARSER_BEGIN(Gramatica)
@@ -9,6 +9,9 @@ import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
 import java.io.IOException;
+import coco.Tabla;
+import coco.Simbolo;
+import arbol.Arbol;
 
 import java.io.InputStream;
 
@@ -17,6 +20,14 @@ import static java.lang.System.err;
 
 public class Gramatica
 {
+
+		private static Tabla tabla = new Tabla();
+
+		public static Tabla getTabla()
+		{
+      			return tabla;
+  		}
+  	
   public static void main(String args []) throws ParseException, IOException
   {
 	  if (args.length == 0)
@@ -177,299 +188,1062 @@ TOKEN : /* TOKENS */
 }
 
 // Producción principal.
-void Coco() :
-{}
+Arbol Coco() :
 {
-	( funcion() )* < INICIO > ( sentencia() )* < FINAL > < EOF >
+  	Arbol raiz = new Arbol("Arbol del archivo analizado:"); 
+  	Arbol fn, stmt;
+  	Token t_inicio, t_final;  
+}
+{
+	( fn =  funcion() { raiz.agregarHijo(fn); } )*
+	
+	t_inicio = < INICIO >
+	{ raiz.agregarHijo(new Arbol("Token: " + t_inicio.image)); }
+	
+	( stmt = sentencia()
+	{ raiz.agregarHijo(stmt); } )*
+	
+	t_final = < FINAL >
+	
+	{ raiz.agregarHijo(new Arbol("Token: " + t_final.image)); }
+	< EOF >
+
+	{ return raiz; }
 }
 
 // Funciones, van antes de la funcion principal (< INICIO > *** < FINAL >)
 // Si regresa un valor, debe ser especificado explicitamente,
 // declarando el tipo y el nombre de la variable
-void funcion() :
-{}
+Arbol funcion() :
 {
-  < INICIO_DECLARACION_FUNCION > < IDENTIFICADOR > < FLECHA > tiposDeDatos() < PARENTESIS_ABRE > listaParametros() < PARENTESIS_CIERRA >
-  	bloqueDeCodigo()
+  	Arbol nodoFuncion = new Arbol("DeclaracionDeFuncion");
+  	String tipoRetorno, nombreFuncion;
+  	Arbol parametros, bloque;
+  	Token t_decl, t_id, t_flecha, t_pa, t_pc;
+}
+{
+  	t_decl = < INICIO_DECLARACION_FUNCION >
+  	{ nodoFuncion.agregarHijo(new Arbol ("Token: " + t_decl.image)); }
+  	
+  	t_id = < IDENTIFICADOR >
+  	{
+  	  	nodoFuncion.agregarHijo(new Arbol ("Token: " + t_id.image));
+		nombreFuncion = t_id.image; 
+  	}
+  	
+  	t_flecha = < FLECHA >
+  	{ nodoFuncion.agregarHijo(new Arbol ("Token " + t_flecha.image)); }
+  	
+  	tipoRetorno = tiposDeDatos()
+  	{ nodoFuncion.agregarHijo(new Arbol("TipoRetorno: " + tipoRetorno)); }
+
+  	{
+  	  Simbolo simboloFuncion = new Simbolo(nombreFuncion, "funcion", tabla.getAmbitoActual(), t_id.beginLine);
+  	  //simboloFuncion.tipoRetorno = tipoRetorno;
+      tabla.insertar(simboloFuncion);
+    }
+
+  	
+  	t_pa = < PARENTESIS_ABRE >
+  	{ nodoFuncion.agregarHijo(new Arbol ("Token " + t_pa.image)); }
+
+  	{ tabla.entrarAmbito(nombreFuncion); }
+  	parametros = listaParametros()
+  	{ nodoFuncion.agregarHijo(parametros); }
+  	
+  	t_pc = < PARENTESIS_CIERRA >
+  	{ nodoFuncion.agregarHijo(new Arbol ("Token " + t_pc.image)); }
+
+  	//{ tabla.entrarAmbito(nombreFuncion); }
+  	
+  	bloque = bloqueDeCodigo()
+  	{ nodoFuncion.agregarHijo(bloque); }
+
+  	{ tabla.salirAmbito(); }
+
+  	{ return nodoFuncion; }
 }
 
 // Lista de parametros que se pueden pasar a una función. (Producción)
-void listaParametros() :
-{}
+Arbol listaParametros() :
 {
-  ( parametro() ( < COMA > parametro() )* ) ?
+  	Arbol nodoListaDeParametros = new Arbol("ListaDeParametros");
+  	Arbol param;
+  	Token t_coma;
+}
+{
+  	(
+    	param = parametro()
+    	{ nodoListaDeParametros.agregarHijo(param); }
+    (
+       t_coma = < COMA >
+       { nodoListaDeParametros.agregarHijo(new Arbol ("Token: " + t_coma.image)); }
+
+       param = parametro()
+       { nodoListaDeParametros.agregarHijo(param); }
+    )*
+   	) ?
+
+    { return nodoListaDeParametros; }
 }
 
 // Regla que define los parametros individuales.
-void parametro() :
-{}
+Arbol parametro() :
 {
-  tiposDeDatos() < DOS_PUNTOS > < IDENTIFICADOR >
+  	Arbol nodoParametro = new Arbol("ParametroIndividual");
+  	Token t_dos_puntos, t_id;
+  	String tipoDato;
+}
+{
+
+	  tipoDato = tiposDeDatos()
+      { nodoParametro.agregarHijo(new Arbol("Tipo: " + tipoDato)); }
+
+      t_dos_puntos = < DOS_PUNTOS >
+	  { nodoParametro.agregarHijo(new Arbol ("Token: " + t_dos_puntos.image)); }
+
+	  t_id = < IDENTIFICADOR >
+      	{ 
+        	nodoParametro.agregarHijo(new Arbol ("Token: " + t_id.image));
+        	
+        	Simbolo nuevoParametro = new Simbolo(t_id.image, tipoDato, tabla.getAmbitoActual(), t_id.beginLine);
+        	
+        	tabla.insertar(nuevoParametro);
+      	}
+
+  	{ return nodoParametro; }
 }
 
 // Es lo que esta dentro de llaves
 // - > Su "scope" debe ser 1.
-void bloqueDeCodigo() :
-{}
+Arbol bloqueDeCodigo() :
 {
-  < LLAVE_ABRE >
-  	( sentencia() )*
-  < LLAVE_CIERRA >
+  	Arbol nodoBloque = new Arbol("BloqueDeCodigo");
+  	Arbol sentencia;
+  	Token t_llave_a, t_llave_c;
+}
+{
+  	t_llave_a = < LLAVE_ABRE >
+  	{
+  	  	nodoBloque.agregarHijo(new Arbol ("Token: " + t_llave_a.image));
+		tabla.entrarAmbito("bloque_" + t_llave_a.beginLine);
+  	}
+  	
+  	( sentencia = sentencia() { nodoBloque.agregarHijo(sentencia); } )*
+  	
+  	t_llave_c = < LLAVE_CIERRA >
+  	{
+  	  	nodoBloque.agregarHijo(new Arbol ("Token: " + t_llave_c.image));
+		tabla.salirAmbito();
+  	}
+
+  	{ return nodoBloque; }
 }
 
 // Producción sentencia
-void sentencia() :
-{}
+Arbol sentencia() :
 {
-  declaracionDeVariable()
-| declaracionVector()
-| salida()
-| entrada()
-| bucleFor()
-| bucleWhile()
-| condicionalIf()
-| condicionalSwitch()
-| sentenciaRetorno()
-| sentenciasConIdentificador()
+  	Arbol s;
+}
+{
+  	  s = declaracionDeVariable() 		{ return s; }
+  	| s = declaracionVector() 			{ return s; }
+	| s = salida() 						{ return s; }
+	| s = entrada() 					{ return s; }
+	| s = bucleFor() 					{ return s; }
+	| s = bucleWhile() 					{ return s; }
+	| s = condicionalIf() 				{ return s; }
+	| s = condicionalSwitch() 			{ return s; }
+	| s = sentenciaRetorno() 			{ return s; }
+	| s = sentenciasConIdentificador()  { return s; }
 }
 
-void sentenciasConIdentificador() :
-{}
+Arbol sentenciasConIdentificador() :
 {
-    //LOOKAHEAD( <IDENTIFICADOR> <PARENTESIS_ABRE> )
-    LOOKAHEAD(2)
-    llamadaFuncion() < PUNTO_Y_COMA >
-    
-    //llamadaFuncion() <PUNTO_Y_COMA>
-    
+  	Arbol nodo = new Arbol("SentenciasConIdentificador");
+  	Arbol llamadaFunc, accVector, exp;
+  	Token t_pc, t_asig, t_id;
+}
+{
+    LOOKAHEAD(3)
+    (
+      	llamadaFunc = llamadaFuncion()
+      	{ nodo.agregarHijo(llamadaFunc); }
+      	t_pc = < PUNTO_Y_COMA >
+      	{ nodo.agregarHijo(new Arbol ("Token: " + t_pc.image)); }
+		{ return nodo; }
+	)
   
   |
-	LOOKAHEAD(2)
-  	accesoVector() <OPERADOR_ASIGNACION> expresion() <PUNTO_Y_COMA>
-  | <IDENTIFICADOR> <OPERADOR_ASIGNACION> expresion() <PUNTO_Y_COMA>
+  LOOKAHEAD(3)
+	(	  	accVector = accesoVector()
+	  	{ nodo.agregarHijo(accVector); }
+	  	
+	  	t_asig = <OPERADOR_ASIGNACION>
+	  	{ nodo.agregarHijo(new Arbol("Token: " + t_asig.image)); }
 
+	  	exp = expresion()
+	  	{ nodo.agregarHijo(exp); }
+	  	
+	  	t_pc = <PUNTO_Y_COMA>
+	  	{ nodo.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+	  	{ return nodo; }
+	)
+	  
+  |
+
+  	(  	  	t_id = <IDENTIFICADOR>
+  	  	{ nodo.agregarHijo(new Arbol("ID_Asignacion: " + t_id.image));
+
+			Simbolo simboloUsado = tabla.buscar(t_id.image);
+			
+       		 if (simboloUsado == null)
+       		 {
+            	System.err.println("Error ??? Línea: " + t_id.beginLine + " La variable '" + t_id.image
+            	+ "' no ha sido declarada.");
+        	 }
+  	  	}
+  	  	
+  	  	t_asig = <OPERADOR_ASIGNACION>
+  	  	{ nodo.agregarHijo(new Arbol("Token: " + t_asig.image)); }
+  	  	
+  	  	exp = expresion()
+  	  	{ nodo.agregarHijo(exp); }
+
+  	  	t_pc = <PUNTO_Y_COMA>
+  	  	{ nodo.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+  	  	{ return nodo; }
+  	)
+  	
 }
 
-void sentenciaRetorno() :
-{}
+Arbol sentenciaRetorno() :
 {
-  < RETURN > expresion() < PUNTO_Y_COMA >
+  	Arbol nodoRetorno = new Arbol("SentenciaDeRetorno");
+  	Arbol exp;
+  	Token t_return, t_pc;
+}
+{
+  	t_return = < RETURN >
+  	{ nodoRetorno.agregarHijo(new Arbol ("Token: " + t_return.image)); }
+  	
+  	exp = expresion()
+  	{ nodoRetorno.agregarHijo(exp); }
+  	
+  	t_pc = < PUNTO_Y_COMA >
+  	{ nodoRetorno.agregarHijo(new Arbol ("Token: " + t_pc.image)); }
+
+  	{ return nodoRetorno; }
 }
 
-void llamadaFuncion() :
-{}
+Arbol llamadaFuncion() :
 {
-  < IDENTIFICADOR >
-  < PARENTESIS_ABRE >
-  ( expresion() ( < COMA > expresion() )* )?
-  < PARENTESIS_CIERRA >
+  	Arbol nodoLlamadaFuncion = new Arbol("LlamadaAFuncion");
+  	Arbol exp;
+  	Token t_id, t_pa, t_pc, t_coma; 
+}
+{
+  	t_id = < IDENTIFICADOR >
+  	{ nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_id.image)); }
+  	
+  	t_pa = < PARENTESIS_ABRE >
+  	{ nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_pa.image)); }
+  	
+  	(
+  	  	exp = expresion()
+  	  	{ nodoLlamadaFuncion.agregarHijo(exp); }
+  	  	(
+  	  	  	t_coma = < COMA >
+  	  	  	{ nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_coma.image)); }
+  	  	  	
+  	  	  	exp = expresion()
+  	  	  	{ nodoLlamadaFuncion.agregarHijo(exp); }
+  	  	)*
+
+  	 )?
+  	 
+  	t_pc = < PARENTESIS_CIERRA >
+  	{ nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_pc.image)); }
+
+  	{ return nodoLlamadaFuncion; }
 }
 
 // *** Expresiones usando precedencia ***
 
 // Expresiones (+, -, ||)
-void expresion() :
-{}
+Arbol expresion() :
 {
-  	expresionRelacional() // Primero busca el una expresion mas fuerte/elevada.
+
+  	Arbol izquierda, derecha;
+  	Token op;
+}
+{
+    // Primer operando siempre es mas fuerte, por lo que va a la izquierda.
+  	izquierda = expresionRelacional() // Primero busca el una expresion mas fuerte/elevada.
+  	
   	(
-  	   ( < OPERADOR_SUMA > | < OPERADOR_RESTA > | < OPERADOR_OR > ) 
-        expresionRelacional() 	  	)*
+  	   ( op = < OPERADOR_SUMA > | op = < OPERADOR_RESTA > | op = < OPERADOR_OR > ) 
+
+        derecha = expresionRelacional()
+        {
+          	// Nodo para las operaciones.
+          	// Nuevo padre.
+          	Arbol nodoOperacion = new Arbol("Operacion_SUM_RES_OR: " + op.image);
+
+			//sub-árbol anterior (el de la izquierda) como el primer hijo.
+          	nodoOperacion.agregarHijo(izquierda);
+
+          	//Operador
+			nodoOperacion.agregarHijo(new Arbol("Token: " + op.image));
+
+			// Operando de la derecha
+			nodoOperacion.agregarHijo(derecha);
+
+			// Actualizamos izquierda, porque puede iterar muchas veces
+			izquierda = nodoOperacion;
+          	
+        }  	)*
+
+  	{ return izquierda; }
 }
 
 
 // relacionales (==, !=, <, >, <=, >=)
-void expresionRelacional() :
-{}
+Arbol expresionRelacional() :
 {
-  termino() // Busca la siguente mas fuerte/elevada.
+  	Arbol izquierda, derecha;
+  	Token op;
+}
+{
+  	// Primer termino
+  	izquierda = termino() // Busca la siguente mas fuerte/elevada.
       (
         ( 
-            < OPERADOR_IGUALDAD > | < OPERADOR_DESIGUALDAD > 
-          | < OPERADOR_MENOR_QUE > | < OPERADOR_MAYOR_QUE >
-          | < OPERADOR_MENOR_O_IGUAL > | < OPERADOR_MAYOR_O_IGUAL > 
+              op = < OPERADOR_IGUALDAD >
+          	| op = < OPERADOR_DESIGUALDAD > 
+          	| op = < OPERADOR_MENOR_QUE >
+          	| op = < OPERADOR_MAYOR_QUE >
+          	| op = < OPERADOR_MENOR_O_IGUAL >
+          	| op = < OPERADOR_MAYOR_O_IGUAL > 
         )
-        termino()
-    )?
+        // Segundo termino (derecha);
+        derecha = termino()
+        {
+          	// Nuevo nodo padre (operacion).
+          	Arbol nodoOperacion = new Arbol("Operador_Relacional" +  op.image);
+
+          	// Operando izquierdo
+          	nodoOperacion.agregarHijo(izquierda);
+
+          	// Token del operador
+          	nodoOperacion.agregarHijo(new Arbol("Token: " + op.image));
+
+			// Operando derecho.
+          	nodoOperacion.agregarHijo(derecha);
+
+          	// Actualizamos (si, otravez) izquierda
+          	izquierda = nodoOperacion;
+        }
+        // ?
+    )* // - > El bloque completo es opcional XD
+
+    { return izquierda; }
 }
 
 // Terminos (*, /, %, &&)
-void termino() :
-{}
+Arbol termino() :
 {
-  factor() // Busca la siguente mas fuerte/elevada.
-   (
-        ( < OPERADOR_MULTIPLICACION > | < OPERADOR_DIVISION > | < OPERADOR_MODULO > | < OPERADOR_AND > )
-        factor()
-    )*
+  	Arbol izquierda, derecha;
+  	Token op;
+}
+{
+  	// Primer termino
+  	izquierda = factor() // Busca la siguente mas fuerte/elevada.
+  	 (
+       	 (
+       	   	  op = < OPERADOR_MULTIPLICACION >
+       	 	| op =  < OPERADOR_DIVISION >
+       	 	| op = < OPERADOR_MODULO >
+       	 	| op = < OPERADOR_AND >
+       	 )
+       	 derecha = factor()
+       	 {
+       	   	// Nuevo nodo
+       	   	Arbol nodoOperacion = new Arbol("Operacion_MUL_DIV_MOD_AND: " + op.image);
+       	   	
+       	   	// Acumulamos el mini arbol anterior (la o las rama enteriores).
+       	   	nodoOperacion.agregarHijo(izquierda);
+
+       	   	// Token del operador
+       	   	nodoOperacion.agregarHijo(new Arbol ("Token: " + op.image));
+
+       	   	// Operando derecho
+       	   	nodoOperacion.agregarHijo(derecha);
+
+       	   	// Actualizamos (si, otravez) izquierda
+       	   	izquierda = nodoOperacion;
+       	 }
+     )*
+
+     { return izquierda; }
 }
 
 // Factores (!, ++, --)
-void factor() :
-{}
+// Operadores primarios (iden) y unarios 
+Arbol factor() :
 {
-    < NUMERO_ENTERO >
-  | < NUMERO_FLOTANTE >
-  | < CADENA_DE_CARACTERES > 
-  | < IDENTIFICADOR >
-  | < PARENTESIS_ABRE > expresion() < PARENTESIS_CIERRA >
-  | < OPERADOR_NOT > factor()
-  | < OPERADOR_INCREMENTO > factor()
-  | < OPERADOR_DECREMENTO > factor()
-  | < OPERADOR_RESTA > factor()
-  //| llamadaFuncion()
+  	Arbol nodo;
+  	Token t;
+  	Token parA, parC; // Necesario para paréntesis
 }
+{
+    t = <NUMERO_ENTERO>
+    { return new Arbol("Literal_INT: " + t.image); }
+    
+  | t = <NUMERO_FLOTANTE>
+    { return new Arbol("Literal_FLOAT: " + t.image); }
+    
+  | t = <CADENA_DE_CARACTERES>
+    { return new Arbol("Literal_CADENA_DE_CARACTERES: " + t.image); }
+    
+  | t = <IDENTIFICADOR>
+    {
+      //return new Arbol("Literal_IDENTIFICADOR: " + t.image);
+      Simbolo simboloUsado = tabla.buscar(t.image);
+      if (simboloUsado == null)
+        {
+            // Reportar error si la variable no fue encontrada en ningún ámbito
+            System.err.println("Error Semantico ??? [:v] Línea: " + t.beginLine + " La variable o función '" 
+                + t.image + "' no ha sido declarada.");
+        }
 
+        return new Arbol("Literal_IDENTIFICADOR: " + t.image);
+    }
+    
+    
+  // Para identificadores (hojas del arbol)  
+  | parA = <PARENTESIS_ABRE> nodo = expresion() parC = <PARENTESIS_CIERRA>
+    {
+       Arbol nodoAgrupacion = new Arbol("Agrupacion");
+       nodoAgrupacion.agregarHijo(new Arbol("Token: " + parA.image));
+       nodoAgrupacion.agregarHijo(nodo);
+       
+       nodoAgrupacion.agregarHijo(new Arbol("Token: " + parC.image));
+       return nodoAgrupacion;
+    }
+    
+  // Para los operadores unarios.
+  | t = <OPERADOR_NOT> nodo = factor()
+    {
+       Arbol nodoUnario = new Arbol("Unario_NOT");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+       
+       return nodoUnario;
+    }
+    
+  | t = <OPERADOR_INCREMENTO> nodo = factor()
+    {
+       Arbol nodoUnario = new Arbol("Unario_INC");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+       
+       return nodoUnario;
+    }
+    
+  | t = <OPERADOR_DECREMENTO> nodo = factor()
+    {
+       Arbol nodoUnario = new Arbol("Unario_DEC");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+       
+       return nodoUnario;
+    }
+    
+  | t = <OPERADOR_RESTA> nodo = factor()
+    {
+       Arbol nodoUnario = new Arbol("Unario_RESTA");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+       
+       return nodoUnario;
+    }
+    
+ // | nodo = llamadaFuncion() { return nodo; }
+}
 // Fin de las expresiones
 
-void declaracionDeVariable() :
-{}
+Arbol declaracionDeVariable() :
 {
-  < INICIO_DECLARACION_VARIABLE > tiposDeDatos() < DOS_PUNTOS > < IDENTIFICADOR >
-  [ < OPERADOR_ASIGNACION > ( expresion() ) ]
-  < PUNTO_Y_COMA >
+  	Arbol nodoDeclaracion = new Arbol("DeclaracionDeVariable");
+  	Token t_decl, t_dos_puntos, t_id, t_pc, t_asig;
+  	String tipoDato;
+  	Arbol exp; // Creo que ya existen :v
+}
+{
+  	t_decl = < INICIO_DECLARACION_VARIABLE >
+  	{ nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_decl.image)); }
+  	
+  	tipoDato = tiposDeDatos()
+  	{ nodoDeclaracion.agregarHijo(new Arbol("Tipo: " + tipoDato)); }
+  	
+  	t_dos_puntos = < DOS_PUNTOS >
+  	{ nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_dos_puntos.image)); }
+
+  	// Token identificador
+  	t_id = < IDENTIFICADOR >
+	{
+	  	nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_id.image));
+	  	
+		Simbolo nuevoSimbolo = new Simbolo(t_id.image, tipoDato, tabla.getAmbitoActual(), t_id.beginLine);
+        tabla.insertar(nuevoSimbolo);
+	}
+  	
+  	[
+  		t_asig = < OPERADOR_ASIGNACION >
+  		{ nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_asig.image)); }
+
+  		// Sub-produccion 
+  		(
+  		  	exp = expresion()
+  		  	{ nodoDeclaracion.agregarHijo(exp); }
+  		)
+  	] // - > Solo si hay una asignacion.
+
+  	t_pc = < PUNTO_Y_COMA >
+  	{ nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+  	{ return nodoDeclaracion; }
 }
 
 // print!("Hola mundo");
-void salida() :
-{}
+Arbol salida() :
 {
-  < SALIDA > < PARENTESIS_ABRE > ( expresion() )
-  < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
+  	Arbol nodoSalida = new Arbol("SentenciaDeSalida");
+  	Arbol exp;
+  	Token t_salida, t_pa, t_pc, t_pyc;
+}
+{
+  	t_salida = < SALIDA >
+  	{ nodoSalida.agregarHijo(new Arbol("Token: " + t_salida.image)); }
+  	
+  	t_pa = < PARENTESIS_ABRE >
+  	{ nodoSalida.agregarHijo(new Arbol("Token: " + t_pa.image)); }
+  	 
+  	(
+  	  exp = expresion()
+  	  { nodoSalida.agregarHijo(exp); }
+  	)
+  	
+  	t_pc = < PARENTESIS_CIERRA >
+  	{ nodoSalida.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+
+  	t_pyc = < PUNTO_Y_COMA >
+  	{ nodoSalida.agregarHijo(new Arbol("Token: " + t_pyc.image)); }
+
+  	{ return nodoSalida; }
 }
 
 // scan!(operando);
-void entrada() :
-{}
+Arbol entrada() :
 {
-  < ENTRADA > < PARENTESIS_ABRE > < IDENTIFICADOR > < PARENTESIS_CIERRA > < PUNTO_Y_COMA >
+  	Arbol nodoEntrada = new Arbol("SentenciaDeEntrada");
+  	Token t_entrada, t_pa, t_id, t_pc, t_pyc;
+}
+{
+  	t_entrada = < ENTRADA >
+  	{ nodoEntrada.agregarHijo(new Arbol("Token: " + t_entrada.image)); }
+
+  	t_pa = < PARENTESIS_ABRE >
+  	{ nodoEntrada.agregarHijo(new Arbol("Token: " + t_pa.image)); }
+
+  	t_id = < IDENTIFICADOR >
+  	{
+  	  nodoEntrada.agregarHijo(new Arbol("Token: " + t_id.image));
+  	  Simbolo simboloEntrada = tabla.buscar(t_id.image);
+        if (simboloEntrada == null)
+        {
+            System.err.println("Error ??? Línea: " + t_id.beginLine + ": La variable '" + t_id.image + "' para entrada no ha sido declarada.");
+        }
+  	}
+
+  	t_pc = < PARENTESIS_CIERRA >
+  	{ nodoEntrada.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+
+  	t_pyc = < PUNTO_Y_COMA >
+  	{ nodoEntrada.agregarHijo(new Arbol("Token: " + t_pyc.image)); }
+
+  	{ return nodoEntrada; }
 }
 
 // Vector
-void declaracionVector() :
-{}
+Arbol declaracionVector() :
 {
-  tiposDeDatos() < IDENTIFICADOR > dimensionVector() < PUNTO_Y_COMA >
+	Arbol nodoDeclaracionVector = new Arbol("Declarcion_VECTOR");
+	String tipoDato;
+	Arbol dimensionVector;
+	Token t_id, t_pc;
+}
+{
+	tipoDato = tiposDeDatos()
+	{ nodoDeclaracionVector.agregarHijo(new Arbol("Tipo: " + tipoDato)); }
+	  	
+  	t_id = < IDENTIFICADOR >
+   	{
+   	  	nodoDeclaracionVector.agregarHijo(new Arbol("ID_Vector: " + t_id.image));
+		Simbolo nuevoVector = new Simbolo(t_id.image, "vector", tabla.getAmbitoActual(), t_id.beginLine);
+        tabla.insertar(nuevoVector);
+   	}
+	
+  	dimensionVector = dimensionVector()
+ 	{ nodoDeclaracionVector.agregarHijo(dimensionVector); }
+
+	t_pc = < PUNTO_Y_COMA >
+  	{ nodoDeclaracionVector.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+
+  	{ return nodoDeclaracionVector; }
 }
 
-void dimensionVector() :
-{}
+Arbol dimensionVector() :
 {
-  < CORCHETE_ABRE > ( < NUMERO_ENTERO > | < IDENTIFICADOR > ) < CORCHETE_CIERRA > 
+  	Arbol nodoDimensionVector = new Arbol("Dimension_Del_Vector");
+  	Token t_ca, t_int, t_id, t_cc;
+}
+{
+	t_ca = < CORCHETE_ABRE >
+	{ nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_ca.image)); }
+	
+  	(
+    	  t_int = < NUMERO_ENTERO >
+    	  { nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_int.image)); }
+    	  
+    	| t_id = < IDENTIFICADOR >
+    	  { nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_id.image)); }
+  	)
+  	t_cc = < CORCHETE_CIERRA >
+  	{ nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_cc.image)); }
+
+  	{ return nodoDimensionVector; }
 }
 
-void accesoVector() :
-{}
+Arbol accesoVector() :
 {
-  < IDENTIFICADOR > < CORCHETE_ABRE > ( < NUMERO_ENTERO > | < IDENTIFICADOR > ) < CORCHETE_CIERRA >
+  	Arbol nodoAccesoVec = new Arbol("AccesoAlVEctor");
+  	Token t_id, t_ca, t_int, t_cc;
 }
-// FIN vector
+{
+  	t_id = < IDENTIFICADOR >
+  	{
+  	  	nodoAccesoVec.agregarHijo(new Arbol("ID_Vector: " + t_id.image));
+		Simbolo simboloVector = tabla.buscar(t_id.image);
+
+        if (simboloVector == null)
+        {
+            System.err.println("Error ??? Línea: " + t_id.beginLine + ": El vector '" + t_id.image + "' no ha sido declarado.");
+        }
+        else if (!"vector".equals(simboloVector.tipo))
+        {
+            System.err.println("Error ??? Línea: " + t_id.beginLine + ": El identificador '" + t_id.image + "' no es un vector.");
+        }
+     }
+  	
+  	t_ca = < CORCHETE_ABRE >
+  	{ nodoAccesoVec.agregarHijo(new Arbol("Token: " + t_ca.image)); }
+
+  	// Entero o variable en el acceso a la posision de un vector.
+  	(
+  	  	  t_int = < NUMERO_ENTERO >
+  	  	  { nodoAccesoVec.agregarHijo(new Arbol("Literal_INT_Indice: " + t_int.image)); }
+  	  	  
+  	  	| t_id = < IDENTIFICADOR >
+  	  	  {
+  	  	    nodoAccesoVec.agregarHijo(new Arbol("ID_Indice: " + t_id.image));
+              
+              Simbolo simboloIndice = tabla.buscar(t_id.image);
+              if (simboloIndice == null)
+              {
+                  System.err.println("Error ??? Línea: " + t_id.beginLine + ": La variable para el índice '"
+                  	+ t_id.image + "' no ha sido declarada.");
+              }
+              else if (!"int".equals(simboloIndice.tipo))
+              {
+                  System.err.println("Error ??? Línea: " + t_id.beginLine
+                  	+ ": El índice del vector debe ser de tipo entero, pero se encontró '" + simboloIndice.tipo + "'.");
+              }
+  	  	  }
+    )
+
+    t_cc = < CORCHETE_CIERRA >
+    { nodoAccesoVec.agregarHijo(new Arbol("Token: " + t_cc.image)); }
+    { return nodoAccesoVec; }
+}
+// - > FIN vector
 
 
 // Bucles.
 // - > For
-void bucleFor() :
-{}
+Arbol bucleFor() :
 {
-   < BUCLE_FOR > < PARENTESIS_ABRE >
-   ( inicializacionFor() )? < PUNTO_Y_COMA >
-   ( expresion() )? < PUNTO_Y_COMA >
-   ( actualizacionFor() )?
-   < PARENTESIS_CIERRA >
-   bloqueDeCodigo()
+  	Arbol nodoBucleFor = new Arbol("Bucle_FOR");
+	Arbol inicializacion, condicion, actualizacion, bloque;
+  	Token t_for, t_pa, t_pc, t_pyc1, t_pyc2;
+}
+{
+  
+   t_for = < BUCLE_FOR >
+   { nodoBucleFor.agregarHijo(new Arbol("Token: " + t_for.image)); }
+   
+   t_pa = < PARENTESIS_ABRE >
+   { nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pa.image)); }
+   
+   (
+     inicializacion = inicializacionFor()
+     { nodoBucleFor.agregarHijo(inicializacion); }
+   )?
+
+   t_pyc1 = < PUNTO_Y_COMA >
+   { nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pyc1.image)); }
+   
+   (
+     condicion = expresion()
+     { nodoBucleFor.agregarHijo(condicion); }
+   )?
+
+   t_pyc2 = < PUNTO_Y_COMA >
+   { nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pyc2.image)); }
+   
+   (
+     actualizacion = actualizacionFor()
+     { nodoBucleFor.agregarHijo(actualizacion); }
+   )?
+   
+   t_pc = < PARENTESIS_CIERRA >
+   { nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+   
+   bloque = bloqueDeCodigo()
+   {
+     	nodoBucleFor.agregarHijo(bloque);
+   }
+   
+   { return nodoBucleFor; }
 }
 
 // Declaracion e inicializacion de variables en bucles.
-void inicializacionFor():
-{}
+Arbol inicializacionFor() :
 {
-  declaracionDeVariable()
-|  asignacionSinPuntoYComa() 
+ 	Arbol nodoIniFor = new Arbol("Inicializacion_Bucle_FOR");
+ 	Arbol declVar, asigVar;
+}
+{
+  	 declVar = declaracionDeVariable()
+  	 {
+	 	nodoIniFor.agregarHijo(declVar);
+	 	return nodoIniFor;
+	 }
+	 	  
+	|  asigVar = asignacionSinPuntoYComa()
+	{
+	    nodoIniFor.agregarHijo(asigVar);
+	    return nodoIniFor;
+	}
+	
 }
 
 // Auxiliar
-void asignacionSinPuntoYComa() :
-{}
+Arbol asignacionSinPuntoYComa() :
 {
-    LOOKAHEAD(2)
-    < IDENTIFICADOR > < OPERADOR_ASIGNACION > expresion() // Sin punto y coma
-  | 
-    accesoVector() < OPERADOR_ASIGNACION > expresion() // Sin punto y coma
+  	Arbol nodoAsignacion = new Arbol("AsignacionSinPuntoYComa");
+    Arbol accVector, exp;
+    Token t_id, t_asig;
+}
+{
+    LOOKAHEAD(3)
+    (
+        t_id = < IDENTIFICADOR >
+        { nodoAsignacion.agregarHijo(new Arbol("ID_Asignacion: " + t_id.image)); }
+
+        t_asig = < OPERADOR_ASIGNACION >
+        { nodoAsignacion.agregarHijo(new Arbol("Token: " + t_asig.image)); }
+
+        exp = expresion()
+        { nodoAsignacion.agregarHijo(exp); }
+        { return nodoAsignacion; }
+    )  
+    | 
+    (
+        accVector = accesoVector()
+        { nodoAsignacion.agregarHijo(accVector); }
+
+        t_asig = < OPERADOR_ASIGNACION >
+        { nodoAsignacion.agregarHijo(new Arbol("Token: " + t_asig.image)); }
+
+        exp = expresion()
+        { nodoAsignacion.agregarHijo(exp); }
+        { return nodoAsignacion; } 
+    )
+    
 }
 
-void actualizacionFor() :
-{}
+Arbol actualizacionFor() :
 {
-   asignacionSinPuntoYComa() ( < COMA > asignacionSinPuntoYComa() )* 
+   Arbol nodoActualizacion = new Arbol("Actualizacion_Bucle_FOR");
+   Arbol asig;
+   Token t_coma;
+}
+{
+    // asignaxino.
+    asig = asignacionSinPuntoYComa()
+    { nodoActualizacion.agregarHijo(asig); }
+    
+    // Repetición con 0 o más , mas la asignación
+    ( 
+        t_coma = < COMA > 
+        { nodoActualizacion.agregarHijo(new Arbol("Token: " + t_coma.image)); }
+        
+        asig = asignacionSinPuntoYComa()
+        { nodoActualizacion.agregarHijo(asig); }
+    )*
+    
+    { return nodoActualizacion; }
 }
 
 // - > While
-void bucleWhile() :
-{}
+Arbol bucleWhile() :
 {
-  < BUCLE_WHILE >
-  < PARENTESIS_ABRE >
-  expresion()
-  < PARENTESIS_CIERRA >
-  bloqueDeCodigo()
+  	Arbol nodoBucleWhile = new Arbol("Bucle_WHILE");
+    
+    Arbol condicion, bloque;
+    Token t_while, t_pa, t_pc; 
+}
+{
+    
+    t_while = < BUCLE_WHILE > 
+    { nodoBucleWhile.agregarHijo(new Arbol("Token: " + t_while.image)); }
+    
+    t_pa = < PARENTESIS_ABRE > 
+    { nodoBucleWhile.agregarHijo(new Arbol("Token: " + t_pa.image)); }
+    
+    condicion = expresion() 
+    { nodoBucleWhile.agregarHijo(condicion); }
+    
+    t_pc = < PARENTESIS_CIERRA > 
+    { nodoBucleWhile.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+    
+    bloque = bloqueDeCodigo()
+    {
+        nodoBucleWhile.agregarHijo(bloque);
+    }
+    
+    { return nodoBucleWhile; }
 }
 // FIN bucles.
 
 
 // Condicionales.
 // - > If
-void condicionalIf() :
-{}
+Arbol condicionalIf() :
 {
-  < CONDICIONAL_IF > < PARENTESIS_ABRE > expresion() < PARENTESIS_CIERRA >
-  bloqueDeCodigo()
-  ( < CONDICIONAL_ELSE > ( bloqueDeCodigo() | condicionalIf() ) )?
+  	Arbol nodoIf = new Arbol("Condicional_IF");
+    
+    Arbol condicion, bloqueIf, bloqueElse;
+    Token t_if, t_pa, t_pc, t_else; 
+}
+{
+    // "if"
+    t_if = < CONDICIONAL_IF > 
+    { nodoIf.agregarHijo(new Arbol("Token: " + t_if.image)); }
+    
+    // "("
+    t_pa = < PARENTESIS_ABRE > 
+    { nodoIf.agregarHijo(new Arbol("Token: " + t_pa.image)); }
+    
+    // Condición.
+    condicion = expresion() 
+    { nodoIf.agregarHijo(condicion); }
+    
+    // ")"
+    t_pc = < PARENTESIS_CIERRA > 
+    { nodoIf.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+    
+    // Codigo que ejecuta el if.
+    bloqueIf = bloqueDeCodigo()
+    {
+        nodoIf.agregarHijo(bloqueIf);
+    }
+    
+    // Opcional: ELSE/ELSE IF.
+    ( 
+        // else
+        t_else = < CONDICIONAL_ELSE > 
+        { nodoIf.agregarHijo(new Arbol("Token: " + t_else.image)); }
+        { nodoIf.agregarHijo(new Arbol("Bloque_ELSE")); }
+        
+        ( 
+            // ELSE { bloqueDeCodigo() }
+            bloqueElse = bloqueDeCodigo() 
+            { nodoIf.agregarHijo(bloqueElse); }
+            
+            // ELSE IF (condicionalIf())
+            | bloqueElse = condicionalIf() // Llamada recursiva para ELSE/IF
+            { nodoIf.agregarHijo(bloqueElse); }
+        ) 
+    )?
+    
+    { return nodoIf; }
 }
 
 // - > Swich
-void condicionalSwitch() :
-{}
+Arbol condicionalSwitch() :
 {
-  < CONDICIONAL_SWITCH >
-  < PARENTESIS_ABRE >
-  expresion()
-  < PARENTESIS_CIERRA >
-  < LLAVE_ABRE >
-  ( caseSwitch() )*
-  ( defaultSwitch() )?
-  < LLAVE_CIERRA >
+  	Arbol nodoSwitch = new Arbol("Condicional_SWITCH");
+    Arbol expresionControl, caso, defecto;
+    Token t_switch, t_pa, t_pc, t_lla, t_llc; 
+}
+{
+    t_switch = < CONDICIONAL_SWITCH > 
+    { nodoSwitch.agregarHijo(new Arbol("Token: " + t_switch.image)); }
+    
+    t_pa = < PARENTESIS_ABRE > 
+    { nodoSwitch.agregarHijo(new Arbol("Token: " + t_pa.image)); }
+    
+    expresionControl = expresion() 
+    { nodoSwitch.agregarHijo(expresionControl); }
+    
+    t_pc = < PARENTESIS_CIERRA > 
+    { nodoSwitch.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+    
+    t_lla = < LLAVE_ABRE > 
+    { nodoSwitch.agregarHijo(new Arbol("Token: " + t_lla.image)); }
+    
+    
+    //  Casos (cases) (Repetitivo: ( caseSwitch() )*)
+    ( 
+        caso = caseSwitch()
+        { nodoSwitch.agregarHijo(caso); }
+    )* // Default (Opcional: ( defaultSwitch() )?)
+    ( 
+        defecto = defaultSwitch()
+        { nodoSwitch.agregarHijo(defecto); }
+    )?
+    
+    t_llc = < LLAVE_CIERRA > 
+    { nodoSwitch.agregarHijo(new Arbol("Token: " + t_llc.image)); }
+    
+    { return nodoSwitch; }
 }
 
-void caseSwitch() :
-{}
+Arbol caseSwitch() :
 {
-  < CASE_CONDICIONAL_SWITCH >
-  ( < NUMERO_ENTERO > | < CADENA_DE_CARACTERES > )
-  < DOS_PUNTOS >
-  ( sentencia() )*
-  ( sentenciaBreak() )?
+  	Arbol nodoCase = new Arbol("Case_SWITCH");
+    Arbol sentencia, breakSentencia;
+    Token t_case, t_valor, t_dospuntos; 
+}
+{
+    // CASE_CONDICIONAL_SWITCH ("case")
+    t_case = < CASE_CONDICIONAL_SWITCH > 
+    { nodoCase.agregarHijo(new Arbol("Token: " + t_case.image)); }
+    
+    // Valor a reconocer??? (Entero o Cadena)
+    ( 
+        t_valor = < NUMERO_ENTERO > 
+        { nodoCase.agregarHijo(new Arbol("Valor_Case_INT: " + t_valor.image)); }
+        
+        | t_valor = < CADENA_DE_CARACTERES > 
+        { nodoCase.agregarHijo(new Arbol("Valor_Case_STRING: " + t_valor.image)); }
+    )
+    
+    t_dospuntos = < DOS_PUNTOS > 
+    { nodoCase.agregarHijo(new Arbol("Token: " + t_dospuntos.image)); }
+
+    // Cero o mas veces.
+    ( 
+        sentencia = sentencia()
+        { nodoCase.agregarHijo(sentencia); }
+    )*
+    
+    ( 
+        breakSentencia = sentenciaBreak()
+        { nodoCase.agregarHijo(breakSentencia); }
+    )?
+    
+    { return nodoCase; }
 }
 
-void sentenciaBreak() :
-{}
+Arbol sentenciaBreak() :
 {
-  < BREAK > < PUNTO_Y_COMA >
+  	Arbol nodoStmtBreak = new Arbol("SentenciaBreak");
+  	Token t_break, t_pc;
+}
+{
+  	t_break = < BREAK >
+  	{ nodoStmtBreak.agregarHijo(new Arbol("Token: " + t_break.image)); }
+  	
+  	t_pc = < PUNTO_Y_COMA >
+  	{ nodoStmtBreak.agregarHijo(new Arbol("Token: " + t_pc.image)); }
+
+  	{ return nodoStmtBreak; }
 }
 
-void defaultSwitch() :
-{}
+Arbol defaultSwitch() :
 {
-  < DEFAULT_SWITCH >
-  < DOS_PUNTOS > ( sentencia() )* ( sentenciaBreak() )?
+  	Arbol nodoDefault = new Arbol("Default_SWITCH");   
+    Arbol sentencia, breakSentencia;
+    Token t_default, t_dospuntos; 
+}
+{
+    t_default = < DEFAULT_SWITCH > 
+    { nodoDefault.agregarHijo(new Arbol("Token: " + t_default.image)); }
+    
+    t_dospuntos = < DOS_PUNTOS > 
+    { nodoDefault.agregarHijo(new Arbol("Token: " + t_dospuntos.image)); }
+    
+    ( 
+        sentencia = sentencia()
+        { nodoDefault.agregarHijo(sentencia); }
+    )*
+    
+    // Opcional: ( sentenciaBreak() )? 
+    ( 
+        breakSentencia = sentenciaBreak()
+        { nodoDefault.agregarHijo(breakSentencia); }
+    )?
+    
+    { return nodoDefault; }
 }
 // FIN condicionales.
 
-void tiposDeDatos() :
-{}
+String tiposDeDatos() :
 {
-  < ENTERO >
-| < FLOTANTE >
-| < BOOLEANO >
-| < CHAR >
-| < STRING >
+  	//Arbol nodoTipo = new Arbol("TipoDeDato");
+  	Token t;
+}
+{
+  	  t = < ENTERO > { return t.image; }
+  	  /*{
+  	   	nodoTipo.agregarHijo(new Arbol("Token: " + t.image));
+		return nodoTipo;
+  	  }*/
+  	  
+	| t = < FLOTANTE > { return t.image; }
+  	  /*{
+  	    nodoTipo.agregarHijo(new Arbol("Token: " + t.image));
+		return nodoTipo;
+  	  }*/
+
+	| t = < BOOLEANO > { return t.image; }
+	  /*{
+	    nodoTipo.agregarHijo(new Arbol("Token: " + t.image));
+	   	return nodoTipo;
+	  }*/
+
+	| t = < CHAR > { return t.image; }
+    	/*{
+    	  nodoTipo.agregarHijo(new Arbol("Token: " + t.image));
+	  	  return nodoTipo;
+  		}*/
+
+	| t = < STRING > { return t.image; }
+	  /*{
+  	   	nodoTipo.agregarHijo(new Arbol("Token: " + t.image));
+		return nodoTipo;
+  	  }*/
 }

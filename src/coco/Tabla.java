@@ -1,0 +1,135 @@
+package coco;
+import java.util.HashMap;
+import java.util.Stack;
+import static java.lang.System.out;
+import static java.lang.System.err;
+
+/**
+ *      _____     _     _       
+ *     |_   _|_ _| |__ | | __ _ 
+ *       | |/ _` | '_ \| |/ _` |
+ *       | | (_| | |_) | | (_| |
+ *       |_|\__,_|_.__/|_|\__,_| Para gestionar los Simbolos
+ *                              
+ */
+
+/*
+ *	Se utilizara una pila de tablas hash para manipular el ambito(scope).
+ */
+
+public class Tabla 
+{
+		private Stack<HashMap<String, Simbolo>> pilaDeTablas;
+		private String ambitoActual;
+		
+		// Metodo constructor; comienza con ambito = 0 (global);
+		public Tabla()
+		{
+				pilaDeTablas = new Stack<>();
+				entrarAmbito("global");
+		}
+		
+		// Obtenemos el ambito actual (nombre);
+		public String getAmbitoActual() 
+		{
+				return this.ambitoActual;
+		}
+		
+		public void entrarAmbito(String nombreAmbito)
+		{
+				this.ambitoActual = nombreAmbito;
+				pilaDeTablas.push(new HashMap<>());
+				out.println(">>> Entrando a un nuevo ambito: " + nombreAmbito);
+		}
+		
+		public void salirAmbito()
+		{
+				if (!pilaDeTablas.isEmpty())
+				{
+						String nombreAmbitoSaliente = this.ambitoActual; 
+						
+						pilaDeTablas.pop();
+		                
+		                if (!pilaDeTablas.isEmpty()) {
+		                } else {
+		                    this.ambitoActual = "global"; // Vuelve al ámbito inicial
+		                }
+
+						out.println("<<< Saliendo del ámbito: " + nombreAmbitoSaliente); 
+				}
+		}
+		
+		// Para insertar un nuevo simbolo en el ambito actual.
+		public boolean insertar(Simbolo simbolo)
+		{
+				HashMap<String, Simbolo> tablaActual = pilaDeTablas.peek();
+				if (tablaActual.containsKey(simbolo.nombre))
+				{
+						err.println("?? Linea " + simbolo.lineaDeclaracion + "El identificador " 
+								+ simbolo.nombre + "ya ha sido declarado en este ambito.");
+						return false;
+				}
+				tablaActual.put(simbolo.nombre, simbolo);
+				return true;
+		}
+		
+		public Simbolo buscar(String nombre)
+		{
+				for (int i = pilaDeTablas.size() - 1; i >= 0; i-- )
+				{
+						HashMap<String, Simbolo> tabla = pilaDeTablas.get(i); // El iterador
+						if (tabla.containsKey(nombre))
+						{
+								return tabla.get(nombre);
+						}
+				}
+				return null; // Si no se encontro en ningun ambito.
+		}
+		
+		public void imprimirTabla(java.io.PrintStream destino)
+		{
+		        destino.println("--- TABLA DE SIMBOLOS ----------------------------------");
+		        
+		        // Iteramos desde el ámbito global (base de la pila) hasta el actual (cima)
+		        // Puedes cambiar el orden si prefieres ver el ámbito actual primero.
+		        for (int i = 0; i < pilaDeTablas.size(); i++ )
+		        {
+		                HashMap<String, Simbolo> tabla = pilaDeTablas.get(i);
+		                
+		                // Intentamos determinar el nombre del ámbito (Esto es un poco limitado
+		                // porque tu clase Tabla solo almacena ambitoActual, pero lo hacemos por el índice)
+		                String nombreAmbito;
+		                if (i == 0) {
+		                    nombreAmbito = "global";
+		                } else {
+		                    // Si tienes el nombre del ámbito guardado en la pila, úsalo aquí.
+		                    // Como no lo tienes, usaremos el índice y la clave.
+		                    nombreAmbito = "Ámbito Nivel " + i; 
+		                }
+
+		                destino.println("\n== " + nombreAmbito + " (Registros: " + tabla.size() + ") ==");
+		                
+		                // Imprimir la cabecera
+		                destino.printf("%-15s | %-10s | %-10s | %s\n", "NOMBRE", "TIPO", "ÁMBITO", "LINEA");
+		                destino.println("-----------------------------------------------------");
+
+		                // Iterar sobre todos los símbolos en este nivel
+		                for (Simbolo s : tabla.values()) {
+		                    // Usamos printf para un formato de tabla limpio
+		                    destino.printf(
+		                        "%-15s | %-10s | %-10s | %d\n", 
+		                        s.nombre, 
+		                        s.tipo, 
+		                        s.ambito, 
+		                        s.lineaDeclaracion
+		                    );
+		                }
+		        }
+		        destino.println("------------------------------------ FIN TABLA ------");
+		        
+		}
+		
+		
+		
+		
+}

@@ -5,6 +5,9 @@ import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
 import java.io.IOException;
+import coco.Tabla;
+import coco.Simbolo;
+import arbol.Arbol;
 import java.io.InputStream;
 import static java.lang.System.err;
 

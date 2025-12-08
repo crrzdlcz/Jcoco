@@ -5,6 +5,9 @@ import static coco.colores.*;
 import coco.entrada;
 import static java.lang.System.out;
 import java.io.IOException;
+import coco.Tabla;
+import coco.Simbolo;
+import arbol.Arbol;
 
 import java.io.InputStream;
 
@@ -12,6 +15,14 @@ import static java.lang.System.err;
 
 
 public class Gramatica implements GramaticaConstants {
+
+                private static Tabla tabla = new Tabla();
+
+                public static Tabla getTabla()
+                {
+                        return tabla;
+                }
+
   public static void main(String args []) throws ParseException, IOException
   {
           if (args.length == 0)
@@ -23,17 +34,6 @@ public class Gramatica implements GramaticaConstants {
 
           String rutaArchivo = args[0];
 
-/*	  Mal manejo de erroor e/s
-	  try (InputStream is = entrada.leerCodigoFuente(r	utaArchivo))
-	  {
-		  Gramatica parser = new Gramatica(is);
-		  parser.Coco();
-	  }
-	  catch (java.io.IOException e)
-	  {
-	    err.println("Error al leer el archivo " + e.getMessage());
-	  }
-*/
           InputStream is = entrada.leerCodigoFuente(rutaArchivo);
           Gramatica parser = new Gramatica(is);
           parser.Coco();
@@ -42,7 +42,9 @@ public class Gramatica implements GramaticaConstants {
   }
 
 // Producción principal.
-  static final public void Coco() throws ParseException {
+  static final public Arbol Coco() throws ParseException {Arbol raiz = new Arbol("Arbol del archivo analizado:");
+        Arbol fn, stmt;
+        Token t_inicio, t_final;
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -54,9 +56,11 @@ public class Gramatica implements GramaticaConstants {
         jj_la1[0] = jj_gen;
         break label_1;
       }
-      funcion();
+      fn = funcion();
+raiz.agregarHijo(fn);
     }
-    jj_consume_token(INICIO);
+    t_inicio = jj_consume_token(INICIO);
+raiz.agregarHijo(new Arbol("Token: " + t_inicio.image));
     label_2:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -81,35 +85,63 @@ public class Gramatica implements GramaticaConstants {
         jj_la1[1] = jj_gen;
         break label_2;
       }
-      sentencia();
+      stmt = sentencia();
+raiz.agregarHijo(stmt);
     }
-    jj_consume_token(FINAL);
+    t_final = jj_consume_token(FINAL);
+raiz.agregarHijo(new Arbol("Token: " + t_final.image));
     jj_consume_token(0);
+{if ("" != null) return raiz;}
+    throw new Error("Missing return statement in function");
 }
 
 // Funciones, van antes de la funcion principal (< INICIO > *** < FINAL >)
 // Si regresa un valor, debe ser especificado explicitamente,
 // declarando el tipo y el nombre de la variable
-  static final public void funcion() throws ParseException {
-    jj_consume_token(INICIO_DECLARACION_FUNCION);
-    jj_consume_token(IDENTIFICADOR);
-    jj_consume_token(FLECHA);
-    tiposDeDatos();
-    jj_consume_token(PARENTESIS_ABRE);
-    listaParametros();
-    jj_consume_token(PARENTESIS_CIERRA);
-    bloqueDeCodigo();
+  static final public Arbol funcion() throws ParseException {Arbol nodoFuncion = new Arbol("DeclaracionDeFuncion");
+        String tipoRetorno, nombreFuncion;
+        Arbol parametros, bloque;
+        Token t_decl, t_id, t_flecha, t_pa, t_pc;
+    t_decl = jj_consume_token(INICIO_DECLARACION_FUNCION);
+nodoFuncion.agregarHijo(new Arbol ("Token: " + t_decl.image));
+    t_id = jj_consume_token(IDENTIFICADOR);
+nodoFuncion.agregarHijo(new Arbol ("Token: " + t_id.image));
+                nombreFuncion = t_id.image;
+    t_flecha = jj_consume_token(FLECHA);
+nodoFuncion.agregarHijo(new Arbol ("Token " + t_flecha.image));
+    tipoRetorno = tiposDeDatos();
+nodoFuncion.agregarHijo(new Arbol("TipoRetorno: " + tipoRetorno));
+Simbolo simboloFuncion = new Simbolo(nombreFuncion, "funcion", tabla.getAmbitoActual(), t_id.beginLine);
+          //simboloFuncion.tipoRetorno = tipoRetorno;
+      tabla.insertar(simboloFuncion);
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoFuncion.agregarHijo(new Arbol ("Token " + t_pa.image));
+tabla.entrarAmbito(nombreFuncion);
+    parametros = listaParametros();
+nodoFuncion.agregarHijo(parametros);
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoFuncion.agregarHijo(new Arbol ("Token " + t_pc.image));
+    //{ tabla.entrarAmbito(nombreFuncion); }
+    
+            bloque = bloqueDeCodigo();
+nodoFuncion.agregarHijo(bloque);
+tabla.salirAmbito();
+{if ("" != null) return nodoFuncion;}
+    throw new Error("Missing return statement in function");
 }
 
 // Lista de parametros que se pueden pasar a una función. (Producción)
-  static final public void listaParametros() throws ParseException {
+  static final public Arbol listaParametros() throws ParseException {Arbol nodoListaDeParametros = new Arbol("ListaDeParametros");
+        Arbol param;
+        Token t_coma;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case ENTERO:
     case FLOTANTE:
     case BOOLEANO:
     case CHAR:
     case STRING:{
-      parametro();
+      param = parametro();
+nodoListaDeParametros.agregarHijo(param);
       label_3:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -121,8 +153,10 @@ public class Gramatica implements GramaticaConstants {
           jj_la1[2] = jj_gen;
           break label_3;
         }
-        jj_consume_token(COMA);
-        parametro();
+        t_coma = jj_consume_token(COMA);
+nodoListaDeParametros.agregarHijo(new Arbol ("Token: " + t_coma.image));
+        param = parametro();
+nodoListaDeParametros.agregarHijo(param);
       }
       break;
       }
@@ -130,19 +164,36 @@ public class Gramatica implements GramaticaConstants {
       jj_la1[3] = jj_gen;
       ;
     }
+{if ("" != null) return nodoListaDeParametros;}
+    throw new Error("Missing return statement in function");
 }
 
 // Regla que define los parametros individuales.
-  static final public void parametro() throws ParseException {
-    tiposDeDatos();
-    jj_consume_token(DOS_PUNTOS);
-    jj_consume_token(IDENTIFICADOR);
+  static final public Arbol parametro() throws ParseException {Arbol nodoParametro = new Arbol("ParametroIndividual");
+        Token t_dos_puntos, t_id;
+        String tipoDato;
+    tipoDato = tiposDeDatos();
+nodoParametro.agregarHijo(new Arbol("Tipo: " + tipoDato));
+    t_dos_puntos = jj_consume_token(DOS_PUNTOS);
+nodoParametro.agregarHijo(new Arbol ("Token: " + t_dos_puntos.image));
+    t_id = jj_consume_token(IDENTIFICADOR);
+nodoParametro.agregarHijo(new Arbol ("Token: " + t_id.image));
+
+                Simbolo nuevoParametro = new Simbolo(t_id.image, tipoDato, tabla.getAmbitoActual(), t_id.beginLine);
+
+                tabla.insertar(nuevoParametro);
+{if ("" != null) return nodoParametro;}
+    throw new Error("Missing return statement in function");
 }
 
 // Es lo que esta dentro de llaves
 // - > Su "scope" debe ser 1.
-  static final public void bloqueDeCodigo() throws ParseException {
-    jj_consume_token(LLAVE_ABRE);
+  static final public Arbol bloqueDeCodigo() throws ParseException {Arbol nodoBloque = new Arbol("BloqueDeCodigo");
+        Arbol sentencia;
+        Token t_llave_a, t_llave_c;
+    t_llave_a = jj_consume_token(LLAVE_ABRE);
+nodoBloque.agregarHijo(new Arbol ("Token: " + t_llave_a.image));
+                tabla.entrarAmbito("bloque_" + t_llave_a.beginLine);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -167,16 +218,22 @@ public class Gramatica implements GramaticaConstants {
         jj_la1[4] = jj_gen;
         break label_4;
       }
-      sentencia();
+      sentencia = sentencia();
+nodoBloque.agregarHijo(sentencia);
     }
-    jj_consume_token(LLAVE_CIERRA);
+    t_llave_c = jj_consume_token(LLAVE_CIERRA);
+nodoBloque.agregarHijo(new Arbol ("Token: " + t_llave_c.image));
+                tabla.salirAmbito();
+{if ("" != null) return nodoBloque;}
+    throw new Error("Missing return statement in function");
 }
 
 // Producción sentencia
-  static final public void sentencia() throws ParseException {
+  static final public Arbol sentencia() throws ParseException {Arbol s;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case INICIO_DECLARACION_VARIABLE:{
-      declaracionDeVariable();
+      s = declaracionDeVariable();
+{if ("" != null) return s;}
       break;
       }
     case ENTERO:
@@ -184,39 +241,48 @@ public class Gramatica implements GramaticaConstants {
     case BOOLEANO:
     case CHAR:
     case STRING:{
-      declaracionVector();
+      s = declaracionVector();
+{if ("" != null) return s;}
       break;
       }
     case SALIDA:{
-      salida();
+      s = salida();
+{if ("" != null) return s;}
       break;
       }
     case ENTRADA:{
-      entrada();
+      s = entrada();
+{if ("" != null) return s;}
       break;
       }
     case BUCLE_FOR:{
-      bucleFor();
+      s = bucleFor();
+{if ("" != null) return s;}
       break;
       }
     case BUCLE_WHILE:{
-      bucleWhile();
+      s = bucleWhile();
+{if ("" != null) return s;}
       break;
       }
     case CONDICIONAL_IF:{
-      condicionalIf();
+      s = condicionalIf();
+{if ("" != null) return s;}
       break;
       }
     case CONDICIONAL_SWITCH:{
-      condicionalSwitch();
+      s = condicionalSwitch();
+{if ("" != null) return s;}
       break;
       }
     case RETURN:{
-      sentenciaRetorno();
+      s = sentenciaRetorno();
+{if ("" != null) return s;}
       break;
       }
     case IDENTIFICADOR:{
-      sentenciasConIdentificador();
+      s = sentenciasConIdentificador();
+{if ("" != null) return s;}
       break;
       }
     default:
@@ -224,24 +290,48 @@ public class Gramatica implements GramaticaConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void sentenciasConIdentificador() throws ParseException {
-    if (jj_2_1(2)) {
-      llamadaFuncion();
-      jj_consume_token(PUNTO_Y_COMA);
-    } else if (jj_2_2(2)) {
-      accesoVector();
-      jj_consume_token(OPERADOR_ASIGNACION);
-      expresion();
-      jj_consume_token(PUNTO_Y_COMA);
+  static final public Arbol sentenciasConIdentificador() throws ParseException {Arbol nodo = new Arbol("SentenciasConIdentificador");
+        Arbol llamadaFunc, accVector, exp;
+        Token t_pc, t_asig, t_id;
+    if (jj_2_1(3)) {
+      llamadaFunc = llamadaFuncion();
+nodo.agregarHijo(llamadaFunc);
+      t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodo.agregarHijo(new Arbol ("Token: " + t_pc.image));
+{if ("" != null) return nodo;}
+    } else if (jj_2_2(3)) {
+      accVector = accesoVector();
+nodo.agregarHijo(accVector);
+      t_asig = jj_consume_token(OPERADOR_ASIGNACION);
+nodo.agregarHijo(new Arbol("Token: " + t_asig.image));
+      exp = expresion();
+nodo.agregarHijo(exp);
+      t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodo.agregarHijo(new Arbol("Token: " + t_pc.image));
+{if ("" != null) return nodo;}
     } else {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case IDENTIFICADOR:{
-        jj_consume_token(IDENTIFICADOR);
-        jj_consume_token(OPERADOR_ASIGNACION);
-        expresion();
-        jj_consume_token(PUNTO_Y_COMA);
+        t_id = jj_consume_token(IDENTIFICADOR);
+nodo.agregarHijo(new Arbol("ID_Asignacion: " + t_id.image));
+
+                        Simbolo simboloUsado = tabla.buscar(t_id.image);
+
+                 if (simboloUsado == null)
+                 {
+                System.err.println("Error ??? L\u00ednea: " + t_id.beginLine + " La variable '" + t_id.image
+                + "' no ha sido declarada.");
+                 }
+        t_asig = jj_consume_token(OPERADOR_ASIGNACION);
+nodo.agregarHijo(new Arbol("Token: " + t_asig.image));
+        exp = expresion();
+nodo.agregarHijo(exp);
+        t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodo.agregarHijo(new Arbol("Token: " + t_pc.image));
+{if ("" != null) return nodo;}
         break;
         }
       default:
@@ -250,17 +340,29 @@ public class Gramatica implements GramaticaConstants {
         throw new ParseException();
       }
     }
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void sentenciaRetorno() throws ParseException {
-    jj_consume_token(RETURN);
-    expresion();
-    jj_consume_token(PUNTO_Y_COMA);
+  static final public Arbol sentenciaRetorno() throws ParseException {Arbol nodoRetorno = new Arbol("SentenciaDeRetorno");
+        Arbol exp;
+        Token t_return, t_pc;
+    t_return = jj_consume_token(RETURN);
+nodoRetorno.agregarHijo(new Arbol ("Token: " + t_return.image));
+    exp = expresion();
+nodoRetorno.agregarHijo(exp);
+    t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodoRetorno.agregarHijo(new Arbol ("Token: " + t_pc.image));
+{if ("" != null) return nodoRetorno;}
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void llamadaFuncion() throws ParseException {
-    jj_consume_token(IDENTIFICADOR);
-    jj_consume_token(PARENTESIS_ABRE);
+  static final public Arbol llamadaFuncion() throws ParseException {Arbol nodoLlamadaFuncion = new Arbol("LlamadaAFuncion");
+        Arbol exp;
+        Token t_id, t_pa, t_pc, t_coma;
+    t_id = jj_consume_token(IDENTIFICADOR);
+nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_id.image));
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_pa.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case OPERADOR_RESTA:
     case OPERADOR_INCREMENTO:
@@ -271,7 +373,8 @@ public class Gramatica implements GramaticaConstants {
     case NUMERO_ENTERO:
     case IDENTIFICADOR:
     case CADENA_DE_CARACTERES:{
-      expresion();
+      exp = expresion();
+nodoLlamadaFuncion.agregarHijo(exp);
       label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -283,8 +386,10 @@ public class Gramatica implements GramaticaConstants {
           jj_la1[7] = jj_gen;
           break label_5;
         }
-        jj_consume_token(COMA);
-        expresion();
+        t_coma = jj_consume_token(COMA);
+nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_coma.image));
+        exp = expresion();
+nodoLlamadaFuncion.agregarHijo(exp);
       }
       break;
       }
@@ -292,14 +397,19 @@ public class Gramatica implements GramaticaConstants {
       jj_la1[8] = jj_gen;
       ;
     }
-    jj_consume_token(PARENTESIS_CIERRA);
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoLlamadaFuncion.agregarHijo(new Arbol ("Token: " + t_pc.image));
+{if ("" != null) return nodoLlamadaFuncion;}
+    throw new Error("Missing return statement in function");
 }
 
 // *** Expresiones usando precedencia ***
 
 // Expresiones (+, -, ||)
-  static final public void expresion() throws ParseException {
-    expresionRelacional();
+  static final public Arbol expresion() throws ParseException {Arbol izquierda, derecha;
+        Token op;
+    // Primer operando siempre es mas fuerte, por lo que va a la izquierda.
+            izquierda = expresionRelacional();
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -315,15 +425,15 @@ public class Gramatica implements GramaticaConstants {
       }
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case OPERADOR_SUMA:{
-        jj_consume_token(OPERADOR_SUMA);
+        op = jj_consume_token(OPERADOR_SUMA);
         break;
         }
       case OPERADOR_RESTA:{
-        jj_consume_token(OPERADOR_RESTA);
+        op = jj_consume_token(OPERADOR_RESTA);
         break;
         }
       case OPERADOR_OR:{
-        jj_consume_token(OPERADOR_OR);
+        op = jj_consume_token(OPERADOR_OR);
         break;
         }
       default:
@@ -331,63 +441,105 @@ public class Gramatica implements GramaticaConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-      expresionRelacional();
+      derecha = expresionRelacional();
+// Nodo para las operaciones.
+                // Nuevo padre.
+                Arbol nodoOperacion = new Arbol("Operacion_SUM_RES_OR: " + op.image);
+
+                        //sub-árbol anterior (el de la izquierda) como el primer hijo.
+                nodoOperacion.agregarHijo(izquierda);
+
+                //Operador
+                        nodoOperacion.agregarHijo(new Arbol("Token: " + op.image));
+
+                        // Operando de la derecha
+                        nodoOperacion.agregarHijo(derecha);
+
+                        // Actualizamos izquierda, porque puede iterar muchas veces
+                        izquierda = nodoOperacion;
     }
+{if ("" != null) return izquierda;}
+    throw new Error("Missing return statement in function");
 }
 
 // relacionales (==, !=, <, >, <=, >=)
-  static final public void expresionRelacional() throws ParseException {
-    termino();
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case OPERADOR_MENOR_O_IGUAL:
-    case OPERADOR_MAYOR_O_IGUAL:
-    case OPERADOR_IGUALDAD:
-    case OPERADOR_DESIGUALDAD:
-    case OPERADOR_MENOR_QUE:
-    case OPERADOR_MAYOR_QUE:{
+  static final public Arbol expresionRelacional() throws ParseException {Arbol izquierda, derecha;
+        Token op;
+    // Primer termino
+            izquierda = termino();
+    label_7:
+    while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case OPERADOR_IGUALDAD:{
-        jj_consume_token(OPERADOR_IGUALDAD);
-        break;
-        }
-      case OPERADOR_DESIGUALDAD:{
-        jj_consume_token(OPERADOR_DESIGUALDAD);
-        break;
-        }
-      case OPERADOR_MENOR_QUE:{
-        jj_consume_token(OPERADOR_MENOR_QUE);
-        break;
-        }
+      case OPERADOR_MENOR_O_IGUAL:
+      case OPERADOR_MAYOR_O_IGUAL:
+      case OPERADOR_IGUALDAD:
+      case OPERADOR_DESIGUALDAD:
+      case OPERADOR_MENOR_QUE:
       case OPERADOR_MAYOR_QUE:{
-        jj_consume_token(OPERADOR_MAYOR_QUE);
-        break;
-        }
-      case OPERADOR_MENOR_O_IGUAL:{
-        jj_consume_token(OPERADOR_MENOR_O_IGUAL);
-        break;
-        }
-      case OPERADOR_MAYOR_O_IGUAL:{
-        jj_consume_token(OPERADOR_MAYOR_O_IGUAL);
+        ;
         break;
         }
       default:
         jj_la1[11] = jj_gen;
+        break label_7;
+      }
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case OPERADOR_IGUALDAD:{
+        op = jj_consume_token(OPERADOR_IGUALDAD);
+        break;
+        }
+      case OPERADOR_DESIGUALDAD:{
+        op = jj_consume_token(OPERADOR_DESIGUALDAD);
+        break;
+        }
+      case OPERADOR_MENOR_QUE:{
+        op = jj_consume_token(OPERADOR_MENOR_QUE);
+        break;
+        }
+      case OPERADOR_MAYOR_QUE:{
+        op = jj_consume_token(OPERADOR_MAYOR_QUE);
+        break;
+        }
+      case OPERADOR_MENOR_O_IGUAL:{
+        op = jj_consume_token(OPERADOR_MENOR_O_IGUAL);
+        break;
+        }
+      case OPERADOR_MAYOR_O_IGUAL:{
+        op = jj_consume_token(OPERADOR_MAYOR_O_IGUAL);
+        break;
+        }
+      default:
+        jj_la1[12] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      termino();
-      break;
-      }
-    default:
-      jj_la1[12] = jj_gen;
-      ;
+      // Segundo termino (derecha);
+              derecha = termino();
+// Nuevo nodo padre (operacion).
+                Arbol nodoOperacion = new Arbol("Operador_Relacional" +  op.image);
+
+                // Operando izquierdo
+                nodoOperacion.agregarHijo(izquierda);
+
+                // Token del operador
+                nodoOperacion.agregarHijo(new Arbol("Token: " + op.image));
+
+                        // Operando derecho.
+                nodoOperacion.agregarHijo(derecha);
+
+                // Actualizamos (si, otravez) izquierda
+                izquierda = nodoOperacion;
     }
+{if ("" != null) return izquierda;}
+    throw new Error("Missing return statement in function");
 }
 
 // Terminos (*, /, %, &&)
-  static final public void termino() throws ParseException {
-    factor();
-    label_7:
+  static final public Arbol termino() throws ParseException {Arbol izquierda, derecha;
+        Token op;
+    // Primer termino
+            izquierda = factor();
+    label_8:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case OPERADOR_MULTIPLICACION:
@@ -399,23 +551,23 @@ public class Gramatica implements GramaticaConstants {
         }
       default:
         jj_la1[13] = jj_gen;
-        break label_7;
+        break label_8;
       }
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case OPERADOR_MULTIPLICACION:{
-        jj_consume_token(OPERADOR_MULTIPLICACION);
+        op = jj_consume_token(OPERADOR_MULTIPLICACION);
         break;
         }
       case OPERADOR_DIVISION:{
-        jj_consume_token(OPERADOR_DIVISION);
+        op = jj_consume_token(OPERADOR_DIVISION);
         break;
         }
       case OPERADOR_MODULO:{
-        jj_consume_token(OPERADOR_MODULO);
+        op = jj_consume_token(OPERADOR_MODULO);
         break;
         }
       case OPERADOR_AND:{
-        jj_consume_token(OPERADOR_AND);
+        op = jj_consume_token(OPERADOR_AND);
         break;
         }
       default:
@@ -423,53 +575,112 @@ public class Gramatica implements GramaticaConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-      factor();
+      derecha = factor();
+// Nuevo nodo
+                Arbol nodoOperacion = new Arbol("Operacion_MUL_DIV_MOD_AND: " + op.image);
+
+                // Acumulamos el mini arbol anterior (la o las rama enteriores).
+                nodoOperacion.agregarHijo(izquierda);
+
+                // Token del operador
+                nodoOperacion.agregarHijo(new Arbol ("Token: " + op.image));
+
+                // Operando derecho
+                nodoOperacion.agregarHijo(derecha);
+
+                // Actualizamos (si, otravez) izquierda
+                izquierda = nodoOperacion;
     }
+{if ("" != null) return izquierda;}
+    throw new Error("Missing return statement in function");
 }
 
 // Factores (!, ++, --)
-  static final public void factor() throws ParseException {
+// Operadores primarios (iden) y unarios 
+  static final public Arbol factor() throws ParseException {Arbol nodo;
+        Token t;
+        Token parA, parC; // Necesario para paréntesis
+
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case NUMERO_ENTERO:{
-      jj_consume_token(NUMERO_ENTERO);
+      t = jj_consume_token(NUMERO_ENTERO);
+{if ("" != null) return new Arbol("Literal_INT: " + t.image);}
       break;
       }
     case NUMERO_FLOTANTE:{
-      jj_consume_token(NUMERO_FLOTANTE);
+      t = jj_consume_token(NUMERO_FLOTANTE);
+{if ("" != null) return new Arbol("Literal_FLOAT: " + t.image);}
       break;
       }
     case CADENA_DE_CARACTERES:{
-      jj_consume_token(CADENA_DE_CARACTERES);
+      t = jj_consume_token(CADENA_DE_CARACTERES);
+{if ("" != null) return new Arbol("Literal_CADENA_DE_CARACTERES: " + t.image);}
       break;
       }
     case IDENTIFICADOR:{
-      jj_consume_token(IDENTIFICADOR);
+      t = jj_consume_token(IDENTIFICADOR);
+//return new Arbol("Literal_IDENTIFICADOR: " + t.image);
+      Simbolo simboloUsado = tabla.buscar(t.image);
+      if (simboloUsado == null)
+        {
+            // Reportar error si la variable no fue encontrada en ningún ámbito
+            System.err.println("Error Semantico ??? [:v] L\u00ednea: " + t.beginLine + " La variable o funci\u00f3n '"
+                + t.image + "' no ha sido declarada.");
+        }
+
+        {if ("" != null) return new Arbol("Literal_IDENTIFICADOR: " + t.image);}
       break;
       }
     case PARENTESIS_ABRE:{
-      jj_consume_token(PARENTESIS_ABRE);
-      expresion();
-      jj_consume_token(PARENTESIS_CIERRA);
+      parA = jj_consume_token(PARENTESIS_ABRE);
+      nodo = expresion();
+      parC = jj_consume_token(PARENTESIS_CIERRA);
+Arbol nodoAgrupacion = new Arbol("Agrupacion");
+       nodoAgrupacion.agregarHijo(new Arbol("Token: " + parA.image));
+       nodoAgrupacion.agregarHijo(nodo);
+
+       nodoAgrupacion.agregarHijo(new Arbol("Token: " + parC.image));
+       {if ("" != null) return nodoAgrupacion;}
       break;
       }
     case OPERADOR_NOT:{
-      jj_consume_token(OPERADOR_NOT);
-      factor();
+      t = jj_consume_token(OPERADOR_NOT);
+      nodo = factor();
+Arbol nodoUnario = new Arbol("Unario_NOT");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+
+       {if ("" != null) return nodoUnario;}
       break;
       }
     case OPERADOR_INCREMENTO:{
-      jj_consume_token(OPERADOR_INCREMENTO);
-      factor();
+      t = jj_consume_token(OPERADOR_INCREMENTO);
+      nodo = factor();
+Arbol nodoUnario = new Arbol("Unario_INC");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+
+       {if ("" != null) return nodoUnario;}
       break;
       }
     case OPERADOR_DECREMENTO:{
-      jj_consume_token(OPERADOR_DECREMENTO);
-      factor();
+      t = jj_consume_token(OPERADOR_DECREMENTO);
+      nodo = factor();
+Arbol nodoUnario = new Arbol("Unario_DEC");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+
+       {if ("" != null) return nodoUnario;}
       break;
       }
     case OPERADOR_RESTA:{
-      jj_consume_token(OPERADOR_RESTA);
-      factor();
+      t = jj_consume_token(OPERADOR_RESTA);
+      nodo = factor();
+Arbol nodoUnario = new Arbol("Unario_RESTA");
+       nodoUnario.agregarHijo(new Arbol("Token: " + t.image));
+       nodoUnario.agregarHijo(nodo);
+
+       {if ("" != null) return nodoUnario;}
       break;
       }
     default:
@@ -477,63 +688,119 @@ public class Gramatica implements GramaticaConstants {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
 // Fin de las expresiones
   static final public 
-void declaracionDeVariable() throws ParseException {
-    jj_consume_token(INICIO_DECLARACION_VARIABLE);
-    tiposDeDatos();
-    jj_consume_token(DOS_PUNTOS);
-    jj_consume_token(IDENTIFICADOR);
+Arbol declaracionDeVariable() throws ParseException {Arbol nodoDeclaracion = new Arbol("DeclaracionDeVariable");
+        Token t_decl, t_dos_puntos, t_id, t_pc, t_asig;
+        String tipoDato;
+        Arbol exp; // Creo que ya existen :v
+
+    t_decl = jj_consume_token(INICIO_DECLARACION_VARIABLE);
+nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_decl.image));
+    tipoDato = tiposDeDatos();
+nodoDeclaracion.agregarHijo(new Arbol("Tipo: " + tipoDato));
+    t_dos_puntos = jj_consume_token(DOS_PUNTOS);
+nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_dos_puntos.image));
+    // Token identificador
+            t_id = jj_consume_token(IDENTIFICADOR);
+nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_id.image));
+                Simbolo nuevoSimbolo = new Simbolo(t_id.image, tipoDato, tabla.getAmbitoActual(), t_id.beginLine);
+        tabla.insertar(nuevoSimbolo);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case OPERADOR_ASIGNACION:{
-      jj_consume_token(OPERADOR_ASIGNACION);
-      expresion();
+      t_asig = jj_consume_token(OPERADOR_ASIGNACION);
+nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_asig.image));
+      exp = expresion();
+nodoDeclaracion.agregarHijo(exp);
       break;
       }
     default:
       jj_la1[16] = jj_gen;
       ;
     }
-    jj_consume_token(PUNTO_Y_COMA);
+    // - > Solo si hay una asignacion.
+    
+            t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodoDeclaracion.agregarHijo(new Arbol("Token: " + t_pc.image));
+{if ("" != null) return nodoDeclaracion;}
+    throw new Error("Missing return statement in function");
 }
 
 // print!("Hola mundo");
-  static final public void salida() throws ParseException {
-    jj_consume_token(SALIDA);
-    jj_consume_token(PARENTESIS_ABRE);
-    expresion();
-    jj_consume_token(PARENTESIS_CIERRA);
-    jj_consume_token(PUNTO_Y_COMA);
+  static final public Arbol salida() throws ParseException {Arbol nodoSalida = new Arbol("SentenciaDeSalida");
+        Arbol exp;
+        Token t_salida, t_pa, t_pc, t_pyc;
+    t_salida = jj_consume_token(SALIDA);
+nodoSalida.agregarHijo(new Arbol("Token: " + t_salida.image));
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoSalida.agregarHijo(new Arbol("Token: " + t_pa.image));
+    exp = expresion();
+nodoSalida.agregarHijo(exp);
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoSalida.agregarHijo(new Arbol("Token: " + t_pc.image));
+    t_pyc = jj_consume_token(PUNTO_Y_COMA);
+nodoSalida.agregarHijo(new Arbol("Token: " + t_pyc.image));
+{if ("" != null) return nodoSalida;}
+    throw new Error("Missing return statement in function");
 }
 
 // scan!(operando);
-  static final public void entrada() throws ParseException {
-    jj_consume_token(ENTRADA);
-    jj_consume_token(PARENTESIS_ABRE);
-    jj_consume_token(IDENTIFICADOR);
-    jj_consume_token(PARENTESIS_CIERRA);
-    jj_consume_token(PUNTO_Y_COMA);
+  static final public Arbol entrada() throws ParseException {Arbol nodoEntrada = new Arbol("SentenciaDeEntrada");
+        Token t_entrada, t_pa, t_id, t_pc, t_pyc;
+    t_entrada = jj_consume_token(ENTRADA);
+nodoEntrada.agregarHijo(new Arbol("Token: " + t_entrada.image));
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoEntrada.agregarHijo(new Arbol("Token: " + t_pa.image));
+    t_id = jj_consume_token(IDENTIFICADOR);
+nodoEntrada.agregarHijo(new Arbol("Token: " + t_id.image));
+          Simbolo simboloEntrada = tabla.buscar(t_id.image);
+        if (simboloEntrada == null)
+        {
+            System.err.println("Error ??? L\u00ednea: " + t_id.beginLine + ": La variable '" + t_id.image + "' para entrada no ha sido declarada.");
+        }
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoEntrada.agregarHijo(new Arbol("Token: " + t_pc.image));
+    t_pyc = jj_consume_token(PUNTO_Y_COMA);
+nodoEntrada.agregarHijo(new Arbol("Token: " + t_pyc.image));
+{if ("" != null) return nodoEntrada;}
+    throw new Error("Missing return statement in function");
 }
 
 // Vector
-  static final public void declaracionVector() throws ParseException {
-    tiposDeDatos();
-    jj_consume_token(IDENTIFICADOR);
-    dimensionVector();
-    jj_consume_token(PUNTO_Y_COMA);
+  static final public Arbol declaracionVector() throws ParseException {Arbol nodoDeclaracionVector = new Arbol("Declarcion_VECTOR");
+        String tipoDato;
+        Arbol dimensionVector;
+        Token t_id, t_pc;
+    tipoDato = tiposDeDatos();
+nodoDeclaracionVector.agregarHijo(new Arbol("Tipo: " + tipoDato));
+    t_id = jj_consume_token(IDENTIFICADOR);
+nodoDeclaracionVector.agregarHijo(new Arbol("ID_Vector: " + t_id.image));
+                Simbolo nuevoVector = new Simbolo(t_id.image, "vector", tabla.getAmbitoActual(), t_id.beginLine);
+        tabla.insertar(nuevoVector);
+    dimensionVector = dimensionVector();
+nodoDeclaracionVector.agregarHijo(dimensionVector);
+    t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodoDeclaracionVector.agregarHijo(new Arbol("Token: " + t_pc.image));
+{if ("" != null) return nodoDeclaracionVector;}
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void dimensionVector() throws ParseException {
-    jj_consume_token(CORCHETE_ABRE);
+  static final public Arbol dimensionVector() throws ParseException {Arbol nodoDimensionVector = new Arbol("Dimension_Del_Vector");
+        Token t_ca, t_int, t_id, t_cc;
+    t_ca = jj_consume_token(CORCHETE_ABRE);
+nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_ca.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case NUMERO_ENTERO:{
-      jj_consume_token(NUMERO_ENTERO);
+      t_int = jj_consume_token(NUMERO_ENTERO);
+nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_int.image));
       break;
       }
     case IDENTIFICADOR:{
-      jj_consume_token(IDENTIFICADOR);
+      t_id = jj_consume_token(IDENTIFICADOR);
+nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_id.image));
       break;
       }
     default:
@@ -541,19 +808,49 @@ void declaracionDeVariable() throws ParseException {
       jj_consume_token(-1);
       throw new ParseException();
     }
-    jj_consume_token(CORCHETE_CIERRA);
+    t_cc = jj_consume_token(CORCHETE_CIERRA);
+nodoDimensionVector.agregarHijo(new Arbol("Token: " + t_cc.image));
+{if ("" != null) return nodoDimensionVector;}
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void accesoVector() throws ParseException {
-    jj_consume_token(IDENTIFICADOR);
-    jj_consume_token(CORCHETE_ABRE);
+  static final public Arbol accesoVector() throws ParseException {Arbol nodoAccesoVec = new Arbol("AccesoAlVEctor");
+        Token t_id, t_ca, t_int, t_cc;
+    t_id = jj_consume_token(IDENTIFICADOR);
+nodoAccesoVec.agregarHijo(new Arbol("ID_Vector: " + t_id.image));
+                Simbolo simboloVector = tabla.buscar(t_id.image);
+
+        if (simboloVector == null)
+        {
+            System.err.println("Error ??? L\u00ednea: " + t_id.beginLine + ": El vector '" + t_id.image + "' no ha sido declarado.");
+        }
+        else if (!"vector".equals(simboloVector.tipo))
+        {
+            System.err.println("Error ??? L\u00ednea: " + t_id.beginLine + ": El identificador '" + t_id.image + "' no es un vector.");
+        }
+    t_ca = jj_consume_token(CORCHETE_ABRE);
+nodoAccesoVec.agregarHijo(new Arbol("Token: " + t_ca.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case NUMERO_ENTERO:{
-      jj_consume_token(NUMERO_ENTERO);
+      t_int = jj_consume_token(NUMERO_ENTERO);
+nodoAccesoVec.agregarHijo(new Arbol("Literal_INT_Indice: " + t_int.image));
       break;
       }
     case IDENTIFICADOR:{
-      jj_consume_token(IDENTIFICADOR);
+      t_id = jj_consume_token(IDENTIFICADOR);
+nodoAccesoVec.agregarHijo(new Arbol("ID_Indice: " + t_id.image));
+
+              Simbolo simboloIndice = tabla.buscar(t_id.image);
+              if (simboloIndice == null)
+              {
+                  System.err.println("Error ??? L\u00ednea: " + t_id.beginLine + ": La variable para el \u00edndice '"
+                        + t_id.image + "' no ha sido declarada.");
+              }
+              else if (!"int".equals(simboloIndice.tipo))
+              {
+                  System.err.println("Error ??? L\u00ednea: " + t_id.beginLine
+                        + ": El \u00edndice del vector debe ser de tipo entero, pero se encontr\u00f3 '" + simboloIndice.tipo + "'.");
+              }
       break;
       }
     default:
@@ -561,28 +858,37 @@ void declaracionDeVariable() throws ParseException {
       jj_consume_token(-1);
       throw new ParseException();
     }
-    jj_consume_token(CORCHETE_CIERRA);
+    t_cc = jj_consume_token(CORCHETE_CIERRA);
+nodoAccesoVec.agregarHijo(new Arbol("Token: " + t_cc.image));
+{if ("" != null) return nodoAccesoVec;}
+    throw new Error("Missing return statement in function");
 }
 
-// FIN vector
+// - > FIN vector
 
 
 // Bucles.
 // - > For
-  static final public void bucleFor() throws ParseException {
-    jj_consume_token(BUCLE_FOR);
-    jj_consume_token(PARENTESIS_ABRE);
+  static final public Arbol bucleFor() throws ParseException {Arbol nodoBucleFor = new Arbol("Bucle_FOR");
+        Arbol inicializacion, condicion, actualizacion, bloque;
+        Token t_for, t_pa, t_pc, t_pyc1, t_pyc2;
+    t_for = jj_consume_token(BUCLE_FOR);
+nodoBucleFor.agregarHijo(new Arbol("Token: " + t_for.image));
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pa.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case INICIO_DECLARACION_VARIABLE:
     case IDENTIFICADOR:{
-      inicializacionFor();
+      inicializacion = inicializacionFor();
+nodoBucleFor.agregarHijo(inicializacion);
       break;
       }
     default:
       jj_la1[19] = jj_gen;
       ;
     }
-    jj_consume_token(PUNTO_Y_COMA);
+    t_pyc1 = jj_consume_token(PUNTO_Y_COMA);
+nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pyc1.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case OPERADOR_RESTA:
     case OPERADOR_INCREMENTO:
@@ -593,36 +899,48 @@ void declaracionDeVariable() throws ParseException {
     case NUMERO_ENTERO:
     case IDENTIFICADOR:
     case CADENA_DE_CARACTERES:{
-      expresion();
+      condicion = expresion();
+nodoBucleFor.agregarHijo(condicion);
       break;
       }
     default:
       jj_la1[20] = jj_gen;
       ;
     }
-    jj_consume_token(PUNTO_Y_COMA);
+    t_pyc2 = jj_consume_token(PUNTO_Y_COMA);
+nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pyc2.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case IDENTIFICADOR:{
-      actualizacionFor();
+      actualizacion = actualizacionFor();
+nodoBucleFor.agregarHijo(actualizacion);
       break;
       }
     default:
       jj_la1[21] = jj_gen;
       ;
     }
-    jj_consume_token(PARENTESIS_CIERRA);
-    bloqueDeCodigo();
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoBucleFor.agregarHijo(new Arbol("Token: " + t_pc.image));
+    bloque = bloqueDeCodigo();
+nodoBucleFor.agregarHijo(bloque);
+{if ("" != null) return nodoBucleFor;}
+    throw new Error("Missing return statement in function");
 }
 
 // Declaracion e inicializacion de variables en bucles.
-  static final public void inicializacionFor() throws ParseException {
+  static final public Arbol inicializacionFor() throws ParseException {Arbol nodoIniFor = new Arbol("Inicializacion_Bucle_FOR");
+        Arbol declVar, asigVar;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case INICIO_DECLARACION_VARIABLE:{
-      declaracionDeVariable();
+      declVar = declaracionDeVariable();
+nodoIniFor.agregarHijo(declVar);
+                {if ("" != null) return nodoIniFor;}
       break;
       }
     case IDENTIFICADOR:{
-      asignacionSinPuntoYComa();
+      asigVar = asignacionSinPuntoYComa();
+nodoIniFor.agregarHijo(asigVar);
+            {if ("" != null) return nodoIniFor;}
       break;
       }
     default:
@@ -630,20 +948,31 @@ void declaracionDeVariable() throws ParseException {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
 // Auxiliar
-  static final public void asignacionSinPuntoYComa() throws ParseException {
-    if (jj_2_3(2)) {
-      jj_consume_token(IDENTIFICADOR);
-      jj_consume_token(OPERADOR_ASIGNACION);
-      expresion();
+  static final public Arbol asignacionSinPuntoYComa() throws ParseException {Arbol nodoAsignacion = new Arbol("AsignacionSinPuntoYComa");
+    Arbol accVector, exp;
+    Token t_id, t_asig;
+    if (jj_2_3(3)) {
+      t_id = jj_consume_token(IDENTIFICADOR);
+nodoAsignacion.agregarHijo(new Arbol("ID_Asignacion: " + t_id.image));
+      t_asig = jj_consume_token(OPERADOR_ASIGNACION);
+nodoAsignacion.agregarHijo(new Arbol("Token: " + t_asig.image));
+      exp = expresion();
+nodoAsignacion.agregarHijo(exp);
+{if ("" != null) return nodoAsignacion;}
     } else {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case IDENTIFICADOR:{
-        accesoVector();
-        jj_consume_token(OPERADOR_ASIGNACION);
-        expresion();
+        accVector = accesoVector();
+nodoAsignacion.agregarHijo(accVector);
+        t_asig = jj_consume_token(OPERADOR_ASIGNACION);
+nodoAsignacion.agregarHijo(new Arbol("Token: " + t_asig.image));
+        exp = expresion();
+nodoAsignacion.agregarHijo(exp);
+{if ("" != null) return nodoAsignacion;}
         break;
         }
       default:
@@ -652,11 +981,16 @@ void declaracionDeVariable() throws ParseException {
         throw new ParseException();
       }
     }
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void actualizacionFor() throws ParseException {
-    asignacionSinPuntoYComa();
-    label_8:
+  static final public Arbol actualizacionFor() throws ParseException {Arbol nodoActualizacion = new Arbol("Actualizacion_Bucle_FOR");
+   Arbol asig;
+   Token t_coma;
+    // asignaxino.
+        asig = asignacionSinPuntoYComa();
+nodoActualizacion.agregarHijo(asig);
+    label_9:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case COMA:{
@@ -665,20 +999,34 @@ void declaracionDeVariable() throws ParseException {
         }
       default:
         jj_la1[24] = jj_gen;
-        break label_8;
+        break label_9;
       }
-      jj_consume_token(COMA);
-      asignacionSinPuntoYComa();
+      t_coma = jj_consume_token(COMA);
+nodoActualizacion.agregarHijo(new Arbol("Token: " + t_coma.image));
+      asig = asignacionSinPuntoYComa();
+nodoActualizacion.agregarHijo(asig);
     }
+{if ("" != null) return nodoActualizacion;}
+    throw new Error("Missing return statement in function");
 }
 
 // - > While
-  static final public void bucleWhile() throws ParseException {
-    jj_consume_token(BUCLE_WHILE);
-    jj_consume_token(PARENTESIS_ABRE);
-    expresion();
-    jj_consume_token(PARENTESIS_CIERRA);
-    bloqueDeCodigo();
+  static final public Arbol bucleWhile() throws ParseException {Arbol nodoBucleWhile = new Arbol("Bucle_WHILE");
+
+    Arbol condicion, bloque;
+    Token t_while, t_pa, t_pc;
+    t_while = jj_consume_token(BUCLE_WHILE);
+nodoBucleWhile.agregarHijo(new Arbol("Token: " + t_while.image));
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoBucleWhile.agregarHijo(new Arbol("Token: " + t_pa.image));
+    condicion = expresion();
+nodoBucleWhile.agregarHijo(condicion);
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoBucleWhile.agregarHijo(new Arbol("Token: " + t_pc.image));
+    bloque = bloqueDeCodigo();
+nodoBucleWhile.agregarHijo(bloque);
+{if ("" != null) return nodoBucleWhile;}
+    throw new Error("Missing return statement in function");
 }
 
 // FIN bucles.
@@ -686,22 +1034,41 @@ void declaracionDeVariable() throws ParseException {
 
 // Condicionales.
 // - > If
-  static final public void condicionalIf() throws ParseException {
-    jj_consume_token(CONDICIONAL_IF);
-    jj_consume_token(PARENTESIS_ABRE);
-    expresion();
-    jj_consume_token(PARENTESIS_CIERRA);
-    bloqueDeCodigo();
+  static final public Arbol condicionalIf() throws ParseException {Arbol nodoIf = new Arbol("Condicional_IF");
+
+    Arbol condicion, bloqueIf, bloqueElse;
+    Token t_if, t_pa, t_pc, t_else;
+    // "if"
+        t_if = jj_consume_token(CONDICIONAL_IF);
+nodoIf.agregarHijo(new Arbol("Token: " + t_if.image));
+    // "("
+        t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoIf.agregarHijo(new Arbol("Token: " + t_pa.image));
+    // Condición.
+        condicion = expresion();
+nodoIf.agregarHijo(condicion);
+    // ")"
+        t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoIf.agregarHijo(new Arbol("Token: " + t_pc.image));
+    // Codigo que ejecuta el if.
+        bloqueIf = bloqueDeCodigo();
+nodoIf.agregarHijo(bloqueIf);
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case CONDICIONAL_ELSE:{
-      jj_consume_token(CONDICIONAL_ELSE);
+      // else
+              t_else = jj_consume_token(CONDICIONAL_ELSE);
+nodoIf.agregarHijo(new Arbol("Token: " + t_else.image));
+nodoIf.agregarHijo(new Arbol("Bloque_ELSE"));
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case LLAVE_ABRE:{
-        bloqueDeCodigo();
+        // ELSE { bloqueDeCodigo() }
+                    bloqueElse = bloqueDeCodigo();
+nodoIf.agregarHijo(bloqueElse);
         break;
         }
       case CONDICIONAL_IF:{
-        condicionalIf();
+        bloqueElse = condicionalIf();
+nodoIf.agregarHijo(bloqueElse);
         break;
         }
       default:
@@ -715,16 +1082,25 @@ void declaracionDeVariable() throws ParseException {
       jj_la1[26] = jj_gen;
       ;
     }
+{if ("" != null) return nodoIf;}
+    throw new Error("Missing return statement in function");
 }
 
 // - > Swich
-  static final public void condicionalSwitch() throws ParseException {
-    jj_consume_token(CONDICIONAL_SWITCH);
-    jj_consume_token(PARENTESIS_ABRE);
-    expresion();
-    jj_consume_token(PARENTESIS_CIERRA);
-    jj_consume_token(LLAVE_ABRE);
-    label_9:
+  static final public Arbol condicionalSwitch() throws ParseException {Arbol nodoSwitch = new Arbol("Condicional_SWITCH");
+    Arbol expresionControl, caso, defecto;
+    Token t_switch, t_pa, t_pc, t_lla, t_llc;
+    t_switch = jj_consume_token(CONDICIONAL_SWITCH);
+nodoSwitch.agregarHijo(new Arbol("Token: " + t_switch.image));
+    t_pa = jj_consume_token(PARENTESIS_ABRE);
+nodoSwitch.agregarHijo(new Arbol("Token: " + t_pa.image));
+    expresionControl = expresion();
+nodoSwitch.agregarHijo(expresionControl);
+    t_pc = jj_consume_token(PARENTESIS_CIERRA);
+nodoSwitch.agregarHijo(new Arbol("Token: " + t_pc.image));
+    t_lla = jj_consume_token(LLAVE_ABRE);
+nodoSwitch.agregarHijo(new Arbol("Token: " + t_lla.image));
+    label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
       case CASE_CONDICIONAL_SWITCH:{
@@ -733,31 +1109,42 @@ void declaracionDeVariable() throws ParseException {
         }
       default:
         jj_la1[27] = jj_gen;
-        break label_9;
+        break label_10;
       }
-      caseSwitch();
+      caso = caseSwitch();
+nodoSwitch.agregarHijo(caso);
     }
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case DEFAULT_SWITCH:{
-      defaultSwitch();
+      defecto = defaultSwitch();
+nodoSwitch.agregarHijo(defecto);
       break;
       }
     default:
       jj_la1[28] = jj_gen;
       ;
     }
-    jj_consume_token(LLAVE_CIERRA);
+    t_llc = jj_consume_token(LLAVE_CIERRA);
+nodoSwitch.agregarHijo(new Arbol("Token: " + t_llc.image));
+{if ("" != null) return nodoSwitch;}
+    throw new Error("Missing return statement in function");
 }
 
-  static final public void caseSwitch() throws ParseException {
-    jj_consume_token(CASE_CONDICIONAL_SWITCH);
+  static final public Arbol caseSwitch() throws ParseException {Arbol nodoCase = new Arbol("Case_SWITCH");
+    Arbol sentencia, breakSentencia;
+    Token t_case, t_valor, t_dospuntos;
+    // CASE_CONDICIONAL_SWITCH ("case")
+        t_case = jj_consume_token(CASE_CONDICIONAL_SWITCH);
+nodoCase.agregarHijo(new Arbol("Token: " + t_case.image));
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case NUMERO_ENTERO:{
-      jj_consume_token(NUMERO_ENTERO);
+      t_valor = jj_consume_token(NUMERO_ENTERO);
+nodoCase.agregarHijo(new Arbol("Valor_Case_INT: " + t_valor.image));
       break;
       }
     case CADENA_DE_CARACTERES:{
-      jj_consume_token(CADENA_DE_CARACTERES);
+      t_valor = jj_consume_token(CADENA_DE_CARACTERES);
+nodoCase.agregarHijo(new Arbol("Valor_Case_STRING: " + t_valor.image));
       break;
       }
     default:
@@ -765,52 +1152,8 @@ void declaracionDeVariable() throws ParseException {
       jj_consume_token(-1);
       throw new ParseException();
     }
-    jj_consume_token(DOS_PUNTOS);
-    label_10:
-    while (true) {
-      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-      case ENTERO:
-      case FLOTANTE:
-      case BOOLEANO:
-      case CHAR:
-      case STRING:
-      case CONDICIONAL_IF:
-      case CONDICIONAL_SWITCH:
-      case BUCLE_FOR:
-      case BUCLE_WHILE:
-      case INICIO_DECLARACION_VARIABLE:
-      case SALIDA:
-      case ENTRADA:
-      case RETURN:
-      case IDENTIFICADOR:{
-        ;
-        break;
-        }
-      default:
-        jj_la1[30] = jj_gen;
-        break label_10;
-      }
-      sentencia();
-    }
-    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
-    case BREAK:{
-      sentenciaBreak();
-      break;
-      }
-    default:
-      jj_la1[31] = jj_gen;
-      ;
-    }
-}
-
-  static final public void sentenciaBreak() throws ParseException {
-    jj_consume_token(BREAK);
-    jj_consume_token(PUNTO_Y_COMA);
-}
-
-  static final public void defaultSwitch() throws ParseException {
-    jj_consume_token(DEFAULT_SWITCH);
-    jj_consume_token(DOS_PUNTOS);
+    t_dospuntos = jj_consume_token(DOS_PUNTOS);
+nodoCase.agregarHijo(new Arbol("Token: " + t_dospuntos.image));
     label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
@@ -832,44 +1175,112 @@ void declaracionDeVariable() throws ParseException {
         break;
         }
       default:
-        jj_la1[32] = jj_gen;
+        jj_la1[30] = jj_gen;
         break label_11;
       }
-      sentencia();
+      sentencia = sentencia();
+nodoCase.agregarHijo(sentencia);
     }
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case BREAK:{
-      sentenciaBreak();
+      breakSentencia = sentenciaBreak();
+nodoCase.agregarHijo(breakSentencia);
+      break;
+      }
+    default:
+      jj_la1[31] = jj_gen;
+      ;
+    }
+{if ("" != null) return nodoCase;}
+    throw new Error("Missing return statement in function");
+}
+
+  static final public Arbol sentenciaBreak() throws ParseException {Arbol nodoStmtBreak = new Arbol("SentenciaBreak");
+        Token t_break, t_pc;
+    t_break = jj_consume_token(BREAK);
+nodoStmtBreak.agregarHijo(new Arbol("Token: " + t_break.image));
+    t_pc = jj_consume_token(PUNTO_Y_COMA);
+nodoStmtBreak.agregarHijo(new Arbol("Token: " + t_pc.image));
+{if ("" != null) return nodoStmtBreak;}
+    throw new Error("Missing return statement in function");
+}
+
+  static final public Arbol defaultSwitch() throws ParseException {Arbol nodoDefault = new Arbol("Default_SWITCH");
+    Arbol sentencia, breakSentencia;
+    Token t_default, t_dospuntos;
+    t_default = jj_consume_token(DEFAULT_SWITCH);
+nodoDefault.agregarHijo(new Arbol("Token: " + t_default.image));
+    t_dospuntos = jj_consume_token(DOS_PUNTOS);
+nodoDefault.agregarHijo(new Arbol("Token: " + t_dospuntos.image));
+    label_12:
+    while (true) {
+      switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+      case ENTERO:
+      case FLOTANTE:
+      case BOOLEANO:
+      case CHAR:
+      case STRING:
+      case CONDICIONAL_IF:
+      case CONDICIONAL_SWITCH:
+      case BUCLE_FOR:
+      case BUCLE_WHILE:
+      case INICIO_DECLARACION_VARIABLE:
+      case SALIDA:
+      case ENTRADA:
+      case RETURN:
+      case IDENTIFICADOR:{
+        ;
+        break;
+        }
+      default:
+        jj_la1[32] = jj_gen;
+        break label_12;
+      }
+      sentencia = sentencia();
+nodoDefault.agregarHijo(sentencia);
+    }
+    switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
+    case BREAK:{
+      breakSentencia = sentenciaBreak();
+nodoDefault.agregarHijo(breakSentencia);
       break;
       }
     default:
       jj_la1[33] = jj_gen;
       ;
     }
+{if ("" != null) return nodoDefault;}
+    throw new Error("Missing return statement in function");
 }
 
 // FIN condicionales.
   static final public 
-void tiposDeDatos() throws ParseException {
+String tiposDeDatos() throws ParseException {//Arbol nodoTipo = new Arbol("TipoDeDato");
+        Token t;
     switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
     case ENTERO:{
-      jj_consume_token(ENTERO);
+      t = jj_consume_token(ENTERO);
+{if ("" != null) return t.image;}
       break;
       }
     case FLOTANTE:{
-      jj_consume_token(FLOTANTE);
+      t = jj_consume_token(FLOTANTE);
+{if ("" != null) return t.image;}
       break;
       }
     case BOOLEANO:{
-      jj_consume_token(BOOLEANO);
+      t = jj_consume_token(BOOLEANO);
+{if ("" != null) return t.image;}
       break;
       }
     case CHAR:{
-      jj_consume_token(CHAR);
+      t = jj_consume_token(CHAR);
+{if ("" != null) return t.image;}
       break;
       }
     case STRING:{
-      jj_consume_token(STRING);
+      t = jj_consume_token(STRING);
+{if ("" != null) return t.image;}
       break;
       }
     default:
@@ -877,6 +1288,7 @@ void tiposDeDatos() throws ParseException {
       jj_consume_token(-1);
       throw new ParseException();
     }
+    throw new Error("Missing return statement in function");
 }
 
   static private boolean jj_2_1(int xla)
@@ -903,10 +1315,95 @@ void tiposDeDatos() throws ParseException {
     finally { jj_save(2, xla); }
   }
 
-  static private boolean jj_3R_accesoVector_376_3_13()
+  static private boolean jj_3R_accesoVector_836_9_14()
  {
     if (jj_scan_token(IDENTIFICADOR)) return true;
     if (jj_scan_token(CORCHETE_ABRE)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_accesoVector_856_19_17()) {
+    jj_scanpos = xsp;
+    if (jj_3R_accesoVector_859_19_18()) return true;
+    }
+    return false;
+  }
+
+  static private boolean jj_3_1()
+ {
+    if (jj_3R_llamadaFuncion_448_9_13()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_603_5_21()
+ {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_factor_603_5_22()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_606_5_23()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_609_5_24()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_612_5_25()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_628_5_26()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_639_5_27()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_648_5_28()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_657_5_29()) {
+    jj_scanpos = xsp;
+    if (jj_3R_factor_666_5_30()) return true;
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    return false;
+  }
+
+  static private boolean jj_3R_factor_603_5_22()
+ {
+    if (jj_scan_token(NUMERO_ENTERO)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_648_5_28()
+ {
+    if (jj_scan_token(OPERADOR_INCREMENTO)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_llamadaFuncion_448_9_13()
+ {
+    if (jj_scan_token(IDENTIFICADOR)) return true;
+    if (jj_scan_token(PARENTESIS_ABRE)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_llamadaFuncion_455_17_16()) jj_scanpos = xsp;
+    if (jj_scan_token(PARENTESIS_CIERRA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_639_5_27()
+ {
+    if (jj_scan_token(OPERADOR_NOT)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_accesoVector_859_19_18()
+ {
+    if (jj_scan_token(IDENTIFICADOR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_accesoVector_856_19_17()
+ {
+    if (jj_scan_token(NUMERO_ENTERO)) return true;
     return false;
   }
 
@@ -914,25 +1411,73 @@ void tiposDeDatos() throws ParseException {
  {
     if (jj_scan_token(IDENTIFICADOR)) return true;
     if (jj_scan_token(OPERADOR_ASIGNACION)) return true;
+    if (jj_3R_expresion_484_9_15()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_expresion_484_9_15()
+ {
+    if (jj_3R_expresionRelacional_522_9_19()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_628_5_26()
+ {
+    if (jj_scan_token(PARENTESIS_ABRE)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_expresionRelacional_522_9_19()
+ {
+    if (jj_3R_termino_564_9_20()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_666_5_30()
+ {
+    if (jj_scan_token(OPERADOR_RESTA)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_termino_564_9_20()
+ {
+    if (jj_3R_factor_603_5_21()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_612_5_25()
+ {
+    if (jj_scan_token(IDENTIFICADOR)) return true;
     return false;
   }
 
   static private boolean jj_3_2()
  {
-    if (jj_3R_accesoVector_376_3_13()) return true;
+    if (jj_3R_accesoVector_836_9_14()) return true;
     return false;
   }
 
-  static private boolean jj_3_1()
+  static private boolean jj_3R_factor_657_5_29()
  {
-    if (jj_3R_llamadaFuncion_273_3_12()) return true;
+    if (jj_scan_token(OPERADOR_DECREMENTO)) return true;
     return false;
   }
 
-  static private boolean jj_3R_llamadaFuncion_273_3_12()
+  static private boolean jj_3R_factor_609_5_24()
  {
-    if (jj_scan_token(IDENTIFICADOR)) return true;
-    if (jj_scan_token(PARENTESIS_ABRE)) return true;
+    if (jj_scan_token(CADENA_DE_CARACTERES)) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_llamadaFuncion_455_17_16()
+ {
+    if (jj_3R_expresion_484_9_15()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_factor_606_5_23()
+ {
+    if (jj_scan_token(NUMERO_FLOTANTE)) return true;
     return false;
   }
 
