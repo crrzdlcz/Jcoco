@@ -96,8 +96,6 @@ public class Tabla
 		        {
 		                HashMap<String, Simbolo> tabla = pilaDeTablas.get(i);
 		                
-		                // Intentamos determinar el nombre del ámbito (Esto es un poco limitado
-		                // porque tu clase Tabla solo almacena ambitoActual, pero lo hacemos por el índice)
 		                String nombreAmbito;
 		                if (i == 0) {
 		                    nombreAmbito = "global";
